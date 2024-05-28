@@ -96,7 +96,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-
+          {{ isModalAdd ? "Agregar" : "Actualizar" }} inmueble
         </h5>
         <button #closebutton type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -109,47 +109,61 @@
                 <div class="mb-3">
                   <label class="form-label">Nombre*:</label>
                   <input type="text" class="form-control" formControlName="nombre" />
-
-                  <div *ngIf="inmueblesForm.get('nombre')?.hasError('required')">
-                    <p style="color: red">La talla es obligatoria</p>
-                  </div>
-                  <div *ngIf="inmueblesForm.get('nombre')?.hasError('minlength')">
-                    <p style="color: red">
+                  <div *ngIf="inmueblesForm.get('nombre')?.touched" class="error-message">
+                    <div *ngIf="
+                      inmueblesForm.get('nombre')?.hasError('required')
+                    ">
+                      La talla es obligatoria
+                    </div>
+                    <div *ngIf="
+                      inmueblesForm.get('nombre')?.hasError('minlength')
+                    ">
                       La talla debe tener al menos 3 caracteres
-                    </p>
-                  </div>
-                  <div *ngIf="inmueblesForm.get('nombre')?.hasError('maxlength')">
-                    <p style="color: red">
-                      La talla debe tener maximo 22 caracteres
-                    </p>
+                    </div>
+                    <div *ngIf="
+                      inmueblesForm.get('nombre')?.hasError('maxlength')
+                    ">
+                      <p style="color: red">
+                        La talla debe tener maximo 22 caracteres
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 <div class="mb-3">
                   <label class="form-label">Cantidad*:</label>
                   <input type="number" class="form-control" formControlName="cantidad" />
-
-                  <div *ngIf="inmueblesForm.get('cantidad')?.hasError('required')">
-                    <p style="color: red">La cantidad es obligatoria</p>
+                  <div *ngIf="inmueblesForm.get('cantidad')?.touched" class="error-message">
+                    <div *ngIf="
+                      inmueblesForm.get('cantidad')?.hasError('required')
+                    ">
+                      La cantidad es obligatoria
+                    </div>
                   </div>
                 </div>
 
                 <div class="mb-3">
                   <label class="form-label">Descripcion*:</label>
                   <textarea class="form-control" formControlName="descripcion"></textarea>
-
-                  <div *ngIf="inmueblesForm.get('descripcion')?.hasError('required')">
-                    <p style="color: red">La descripción es obligatoria</p>
+                  <div *ngIf="inmueblesForm.get('descripcion')?.touched" class="error-message">
+                    <div *ngIf="
+                      inmueblesForm.get('descripcion')?.hasError('required')
+                    ">
+                      La descripción es obligatoria
+                    </div>
                   </div>
                 </div>
-
+                <div class="col-lg-12">
+                  <div class="mb-3">
+                    <img class="img" *ngIf="inmueblesForm.get('imagenBase64')?.value" [src]="
+                    'data:image/jpg;base64,' +
+                    inmueblesForm.get('imagenBase64')?.value
+                  " width="50%" height="50%" alt="Vista previa de la imagen" />
+                  </div>
+                </div>
                 <div class="mb-3">
                   <label class="form-label">Imagen*:</label>
-                  <input type="file" class="form-control" formControlName="imagen" />
-
-                  <div *ngIf="inmueblesForm.get('imagen')?.hasError('required')">
-                    <p style="color: red">La imagen es obligatoria</p>
-                  </div>
+                  <input type="file" class="form-control" formControlName="imagen" (change)="onFileChange($event)" />
                 </div>
 
                 <div class="mb-3">
@@ -160,10 +174,14 @@
                     <option>Sala de juntas</option>
                     <option>Baño A</option>
                   </select>
-
-                  <div *ngIf="inmueblesForm.get('areasDeRespaldo')?.hasError('required')">
-                    <p style="color: red">Campo obligatorio</p>
+                  <div *ngIf="inmueblesForm.get('areasDeRespaldo')?.touched" class="error-message">
+                    <div *ngIf="
+                      inmueblesForm.get('areasDeRespaldo')?.hasError('required')
+                    ">
+                      Campo obligatorio
+                    </div>
                   </div>
+
                 </div>
               </div>
             </div>
