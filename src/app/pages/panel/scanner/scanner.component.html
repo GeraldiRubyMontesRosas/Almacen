@@ -1,1 +1,14 @@
-<p>scanner works!</p>
+<div style="display: flex; flex-direction: column; height: 10vh; align-items: center; justify-content: space-between;">
+  <div>
+    <video #previewVideo [hidden]="!cameraActive" playsinline autoplay style="max-width: 100%; height: auto;"></video>
+  </div>
+  <div>
+    <button type="submit" class="btn btn-success" style="width: 100%; height: 100%; margin-bottom: 20px;"
+      (click)="toggleCamera()">
+      {{ cameraActive ? 'Detener' : 'Activar' }} Cámara
+    </button>
+  </div>
+  <div>
+    <zxing-scanner *ngIf="cameraActive" [start]="cameraActive" (scanSuccess)="onCodeResult($event)"></zxing-scanner>
+  </div>
+</div>
