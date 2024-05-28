@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { PanelComponent } from './panel.component';
 
-
 const routes: Routes = [
   {
     path: '',
@@ -24,11 +23,10 @@ const routes: Routes = [
           import('./tamanos/tamanos.module').then((i) => i.TamanosModule),
       },
       {
-        path: 'Especies',
+        path: 'Inmuebles',
         loadChildren: () =>
-          import('./especies/especies.module').then((i) => i.EspeciesModule),
+          import('./inmuebles/inmuebles.module').then((i) => i.InmueblesModule),
       },
-      
     ],
   },
 ];
