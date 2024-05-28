@@ -33,6 +33,11 @@ const routes: Routes = [
         loadChildren: () =>
           import('./area/area.module').then((i) => i.AreaModule),
       },
+      {
+        path: 'Scanner',
+        loadChildren: () =>
+          import('./scanner/scanner.module').then((i) => i.ScannerModule),
+      },
     ],
   },
 ];
