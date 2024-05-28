@@ -1,0 +1,51 @@
+<div class="container-fluid">
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
+    aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <h1 class="navbar-brand navbar-brand-autodark d-flex justify-content-center align-items-center">
+    <img src="" style="width: 130px; height: 130px" alt="PAC" />
+  </h1>
+  <div class="collapse navbar-collapse" id="sidebar-menu">
+    <ul class="navbar-nav pt-lg-3">
+      <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="cerrarMenu()">
+        <a class="nav-link" [routerLink]="['inicio']">
+          <span class="nav-link-icon d-md-none d-lg-inline-block">
+            <i class="ti ti-home"></i>
+          </span>
+          <span class="nav-link-title">Inicio</span>
+        </a>
+      </li>
+      <li class="nav-item dropdown" [ngClass]="{
+        }">
+        <a class="nav-link dropdown-toggle" [routerLink]="" data-bs-toggle="dropdown" data-bs-auto-close="false"
+          role="button" aria-expanded="true">
+          <span class="nav-link-icon d-md-none d-lg-inline-block">
+            <i class="ti ti-shield"></i>
+          </span>
+          <span class="nav-link-title"> Administración </span>
+        </a>
+        <ul class="dropdown-menu show">
+          <div class="dropdown-menu-columns">
+            <div class="dropdown-menu-column">
+              <a class="dropdown-item" [routerLink]="['Tallas']" routerLinkActive="active"
+                #rlDashboard="routerLinkActive" (click)="cerrarMenu()">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-ruler-2"></i>
+                </span>
+                <span class="nav-link-title">Tallas</span>
+              </a>
+              <a class="dropdown-item" [routerLink]="['Especies']" routerLinkActive="active"
+                #rlDashboard="routerLinkActive" (click)="cerrarMenu()">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-alien"></i>
+                </span>
+                <span class="nav-link-title">Especies</span>
+              </a>
+            </div>
+          </div>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
