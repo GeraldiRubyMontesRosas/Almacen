@@ -22,10 +22,16 @@ const routes: Routes = [
         loadChildren: () =>
           import('./tamanos/tamanos.module').then((i) => i.TamanosModule),
       },
+
       {
         path: 'Inmuebles',
         loadChildren: () =>
           import('./inmuebles/inmuebles.module').then((i) => i.InmueblesModule),
+      },
+      {
+        path: 'Area',
+        loadChildren: () =>
+          import('./area/area.module').then((i) => i.AreaModule),
       },
     ],
   },

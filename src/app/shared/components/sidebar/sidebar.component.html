@@ -43,6 +43,13 @@
                 </span>
                 <span class="nav-link-title">Inmuebles</span>
               </a>
+              <a class="dropdown-item" [routerLink]="['Area']" routerLinkActive="active" #rlDashboard="routerLinkActive"
+                (click)="cerrarMenu()">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-books"></i>
+                </span>
+                <span class="nav-link-title">Area</span>
+              </a>
             </div>
           </div>
         </ul>
