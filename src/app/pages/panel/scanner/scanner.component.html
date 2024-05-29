@@ -3,12 +3,12 @@
     <video #previewVideo [hidden]="!cameraActive" playsinline autoplay style="max-width: 100%; height: auto;"></video>
   </div>
   <div>
-    <button type="submit" class="btn btn-success" style="width: 100%; height: 100%; margin-bottom: 20px;"
-      (click)="toggleCamera()">
-      {{ cameraActive ? 'Detener' : 'Activar' }} Cámara
+    <button type="submit" class="btn btn-success"
+      style="width: 100%; height: 100%; margin-bottom: 20px; position: relative;" (click)="toggleCamera()">
+      <i class="ti ti-camera"
+        style="font-size: 24px; position: absolute; top: 0; left: 50%; transform: translateX(-50%);"></i>
+      <span style="display: block; text-align: center; margin-top: 10px;">{{ cameraActive ? 'Detener' : 'Activar' }}
+        Cámara</span>
     </button>
-  </div>
-  <div>
-    <zxing-scanner *ngIf="cameraActive" [start]="cameraActive" (scanSuccess)="onCodeResult($event)"></zxing-scanner>
   </div>
 </div>
