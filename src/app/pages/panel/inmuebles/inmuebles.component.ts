@@ -4,6 +4,9 @@ import { PaginationInstance } from 'ngx-pagination';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MensajeService } from 'src/app/core/services/mensaje.service';
 import { LoadingStates } from 'src/app/global/global';
+import * as QRCode from 'qrcode-generator'; 
+import { identifierName } from '@angular/compiler';
+
 
 @Component({
   selector: 'app-inmuebles',
@@ -14,7 +17,10 @@ export class InmueblesComponent {
   @ViewChild('searchItem') searchItem!: ElementRef;
   @ViewChild('closebutton') closebutton!: ElementRef;
   public isUpdatingfoto: boolean = false;
+
   inmueblesForm!: FormGroup;
+  qrCodeBase64!: string;
+
   isLoading = LoadingStates.neutro;
   idUpdate!: number;
   isModalAdd = true;
@@ -30,7 +36,7 @@ export class InmueblesComponent {
 
   creteForm() {
     this.inmueblesForm = this.formBuilder.group({
-      id: [null],
+      codigo: [null],
       nombre: [
         '',
         [
@@ -69,4 +75,27 @@ export class InmueblesComponent {
       reader.readAsDataURL(file);
     }
   }
+
+  async generarID() {
+    const nombreControl = this.inmueblesForm.get('nombre');
+    const areaRespaldoControl = this.inmueblesForm.get('areasDeResgualdo');
+
+    if (nombreControl && areaRespaldoControl) {
+      const nombre = nombreControl.value.toUpperCase();
+      const areaRespaldo = areaRespaldoControl.value.toUpperCase();
+      const letraAleatoria = String.fromCharCode(65 + Math.floor(Math.random() * 26)).toUpperCase();
+      const numerosAleatorios = Array.from({ length: 3 }, () => Math.floor(Math.random() * 10)).join('');
+      const idGenerado = `${nombre.slice(0, 3)}${areaRespaldo.slice(0, 3)}${letraAleatoria}${numerosAleatorios}`;
+      
+      const qr = QRCode(0, 'H'); 
+      qr.addData(idGenerado); 
+      qr.make(); 
+
+      this.qrCodeBase64 = qr.createDataURL(4); 
+
+      console.log(idGenerado);
+      console.log(this.qrCodeBase64); 
+    }
+  }
+
 }

@@ -33,8 +33,9 @@
     "ngx-color-picker": "^16.0.0",
     "ngx-pagination": "^6.0.3",
     "ngx-spinner": "^16.0.2",
+    "qrcode-generator": "^1.4.4",
     "rxjs": "~7.8.0",
-    "sweetalert2": "^11.10.1",
+    "sweetalert2": "^11.6.13",
     "tslib": "^2.3.0",
     "xlsx": "^0.18.5",
     "zone.js": "~0.13.0"

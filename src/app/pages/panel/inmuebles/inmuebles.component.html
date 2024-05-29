@@ -163,20 +163,20 @@
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Imagen*:</label>
-                  <input type="file" class="form-control" formControlName="imagen" (change)="onFileChange($event)" />
+                  <input type="file" class="form-control" formControlName="imagenBase64" (change)="onFileChange($event)" />
                 </div>
 
                 <div class="mb-3">
                   <label class="form-label">Area De Respaldo*:</label>
-                  <select class="form-select" formControlName="areasDeResguardo">
+                  <select class="form-select" formControlName="areasDeResgualdo">
                     <option selected>--Seleccione un area de respaldo--</option>
                     <option>Oficina</option>
                     <option>Sala de juntas</option>
                     <option>Baño A</option>
                   </select>
-                  <div *ngIf="inmueblesForm.get('areasDeRespaldo')?.touched" class="error-message">
+                  <div *ngIf="inmueblesForm.get('areasDeResgualdo')?.touched" class="error-message">
                     <div *ngIf="
-                      inmueblesForm.get('areasDeRespaldo')?.hasError('required')
+                      inmueblesForm.get('areasDeResgualdo')?.hasError('required')
                     ">
                       Campo obligatorio
                     </div>
@@ -191,7 +191,7 @@
           Todos los campos marcados con * son requeridos
         </p>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success" [disabled]="!inmueblesForm.valid">
+          <button type="submit" class="btn btn-success" [disabled]="!inmueblesForm.valid" (click)="generarID()">
             {{ isModalAdd ? "Agregar" : "Actualizar" }}
           </button>
         </div>
