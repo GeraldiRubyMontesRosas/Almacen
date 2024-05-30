@@ -11,7 +11,7 @@ import { Inmueble } from 'src/app/models/inmueble';
 import { Area } from 'src/app/models/Area';
 import { AreasService } from 'src/app/core/services/areas.service';
 import * as XLSX from 'xlsx';
-
+//prueba
 @Component({
   selector: 'app-inmuebles',
   templateUrl: './inmuebles.component.html',
