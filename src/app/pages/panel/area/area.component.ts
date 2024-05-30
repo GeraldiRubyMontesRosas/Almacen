@@ -7,6 +7,7 @@ import { LoadingStates } from 'src/app/global/global';
 import { AreasService } from 'src/app/core/services/areas.service';
 import { Area } from 'src/app/models/Area';
 import * as XLSX from 'xlsx';
+import { normalizeTickInterval } from 'highcharts';
 
 @Component({
   selector: 'app-area',
@@ -33,8 +34,23 @@ export class AreaComponent {
     private mensajeService: MensajeService,
     private formBuilder: FormBuilder,
     private areasService : AreasService
-  ) {
+  ) { 
+    this.getAreas();
     this.creteForm();
+  }
+
+  getAreas() {
+    this.isLoading = LoadingStates.trueLoading;
+    this.areasService.getAll().subscribe({
+      next: (dataFromAPI) => {
+        this.areas = dataFromAPI;
+        this.areasFilter = this.areas;
+        this.isLoading = LoadingStates.falseLoading;
+      },
+      error: () => {
+        this.isLoading = LoadingStates.errorLoading;
+      },
+    });
   }
 
   creteForm() {
@@ -54,24 +70,6 @@ export class AreaComponent {
     });
   }
 
-  getAreas() {
-    this.isLoading = LoadingStates.trueLoading;
-    this.areasService.getAll().subscribe({
-      
-    })
-  }
-
-  handleChangeAdd() {
-    if (this.areaForm) {
-      this.areaForm.reset();
-      this.isModalAdd = true;
-    }
-  }
-
-  onPageChange(number: number) {
-    this.configPaginator.currentPage = number;
-  }
-
   setDataModalUpdate(dto: Area) {
     this.isModalAdd = false;
     this.idUpdate = dto.id;
@@ -81,5 +79,127 @@ export class AreaComponent {
     });
   }
 
-  deleteItem(id: number, nameItem: string) {}
+  editarUsuario() {
+    this.area = this.areaForm.value as Area;
+    this.spinnerService.show();
+    this.areasService.put(this.idUpdate, this.area).subscribe({
+      next: () => {
+        this.spinnerService.hide();
+        this.mensajeService.mensajeExito('Area actualizada correctamente');
+        this.resetForm();
+      },
+      error : (error) => {
+        this.spinnerService.hide();
+        this.mensajeService.mensajeError(error);
+      },
+    });
+  }
+
+  deleteItem(id: number, nameItem: string){
+    this.mensajeService.mensajeAdvertencia(
+      `¿Estás seguro de eliminar el area: ${nameItem}`, () => {
+        this.areasService.delete(id).subscribe({
+          next : () => {
+            this.mensajeService.mensajeExito('Area borrada correctamente');
+            this.configPaginator.currentPage = 1;
+            this.searchItem.nativeElement.value = '';
+          },
+          error : (error) => this.mensajeService.mensajeError(error),
+        });
+      }
+    );
+  }
+
+  agregar() {
+    this.area = this.areaForm.value as Area;
+    this.spinnerService.show();
+    this.areasService.post(this.area).subscribe({
+      next: () => {
+        this.spinnerService.hide();
+        this.mensajeService.mensajeExito('Area guardada correctamente');
+        this.resetForm();
+        this.configPaginator.currentPage = 1;
+      },
+      error : (error) => {
+        this.spinnerService.hide();
+        this.mensajeService.mensajeError(error);
+      },
+    });
+  }
+
+  resetForm() {
+    this.closebutton.nativeElement.click();
+    this.areaForm.reset();
+  }
+
+  submit() {
+    if (this.isModalAdd === false) {
+      this.editarUsuario();
+    } else {
+      this.agregar();
+    }
+  }
+
+  handleChangeAdd() {
+    if (this.areaForm) {
+      this.areaForm.reset();
+      this.isModalAdd = true;
+    }
+  }
+
+  
+  exportarDatosAExcel(){
+    if(this.areas.length = 0) {
+      console.warn('La lista de areas está vacía. No se puede exportar');
+      return;
+    }
+
+    const datosParaExportar = this.areas.map((area) => {
+      return {
+        '#': area.id,
+        Nombre : area.nombre,
+      };
+    });
+    
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(datosParaExportar);
+    
+    const workbook: XLSX.WorkBook = {
+      Sheets: { data: worksheet},
+      SheetNames: ['data'],
+    };
+    
+    const excelBuffer: any = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    });
+  }
+
+  guardarArchivoExcel(buffer : any, nombreArchivo: string) {
+    const data : Blob = new Blob([buffer], {
+      type : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    const url: string = window.URL.createObjectURL(data);
+    const a: HTMLAnchorElement = document.createElement('a');
+
+    a.href= url;
+    a.download = nombreArchivo;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  handleChangeSearch(event: any) {
+    const inputValue = event.target.value;
+    const valueSearch = inputValue.toLowerCase();
+
+    this.areasFilter = this.areas.filter((area) =>
+      area.nombre.toLowerCase().includes(valueSearch)
+    );
+
+    this.configPaginator.currentPage = 1;
+  }
+
+  onPageChange(number: number) {
+    this.configPaginator.currentPage = number;
+  }
 }
