@@ -57,6 +57,13 @@
                 </span>
                 <span class="nav-link-title">Scanner</span>
               </a>
+              <a class="dropdown-item" [routerLink]="['Traslados']" routerLinkActive="active"
+                #rlDashboard="routerLinkActive" (click)="cerrarMenu()">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-zeppelin"></i>
+                </span>
+                <span class="nav-link-title">Traslados</span>
+              </a>
             </div>
           </div>
         </ul>

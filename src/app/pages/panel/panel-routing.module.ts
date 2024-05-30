@@ -38,6 +38,11 @@ const routes: Routes = [
         loadChildren: () =>
           import('./scanner/scanner.module').then((i) => i.ScannerModule),
       },
+      {
+        path: 'Traslados',
+        loadChildren: () => 
+          import('./traslados/traslados.module').then((i) => i.TrasladosModule),
+      },
     ],
   },
 ];
