@@ -56,7 +56,7 @@
                   Imagen
                 </th>
                 <th style="text-transform: none; font-size: inherit" class="w-1">
-                  Qr
+                 Codigo Qr
                 </th>
                 <th style="text-transform: none; font-size: inherit" class="w-1">
                   Acciones
@@ -132,32 +132,8 @@
       </div>
       <form [formGroup]="inmueblesForm" (ngSubmit)="submit()">
         <div class="modal-body">
-          <div class="">
             <div class="row">
               <div class="col-lg-12">
-                <div class="mb-3">
-                  <label class="form-label">Id*:</label>
-                  <input type="text" class="form-control" formControlName="codigo" />
-                  <div *ngIf="inmueblesForm.get('codigo')?.touched" class="error-message">
-                    <div *ngIf="
-                      inmueblesForm.get('codigo')?.hasError('required')
-                    ">
-                      La talla es obligatoria
-                    </div>
-                    <div *ngIf="
-                      inmueblesForm.get('codigo')?.hasError('minlength')
-                    ">
-                      La talla debe tener al menos 3 caracteres
-                    </div>
-                    <div *ngIf="
-                      inmueblesForm.get('codigo')?.hasError('maxlength')
-                    ">
-                      <p style="color: red">
-                        La talla debe tener maximo 22 caracteres
-                      </p>
-                    </div>
-                  </div>
-                </div>
                 <div class="mb-3">
                   <label class="form-label">Nombre*:</label>
                   <input type="text" class="form-control" formControlName="nombre" />
@@ -220,24 +196,27 @@
 
                 <div class="mb-3">
                   <label class="form-label">Area de resguardo*:</label>
-                  <select class="form-select" formControlName="areasDeResgualdo">
-                    <option selected>--Seleccione un area de respaldo--</option>
-                    <option value="1">Oficina</option>
-                    <option value="1">Sala de juntas</option>
-                    <option value="1">Baño A</option>
-                  </select>
+                  <ng-select formControlName="areasDeResgualdo" #selectareas [searchable]="false"
+                    [items]="areas" bindLabel="nombre" bindValue="id" placeholder="Elegir" [clearable]="false">
+                    <ng-template ng-header-tmp>
+                      <input class="form-control" type="text" (input)="
+                        selectareas.filter($any($event.target).value)
+                      " />
+                    </ng-template>
+                    <ng-template ng-option-tmp let-item="item" let-index="index">
+                      {{ item.nombre }}
+                    </ng-template>
+                  </ng-select>
                   <div *ngIf="inmueblesForm.get('areasDeResgualdo')?.touched" class="error-message">
-                    <div *ngIf="
-                      inmueblesForm.get('areasDeResgualdo')?.hasError('required')
-                    ">
-                      Campo obligatorio
+                    <div *ngIf="inmueblesForm.get('areasDeResgualdo')?.hasError('required')">
+                      El area de esguardo es requerido
                     </div>
                   </div>
-
                 </div>
+                
               </div>
             </div>
-          </div>
+      
         </div>
         <p class="form-label" style="margin-left: 20px; color: red; font-weight: bold">
           Todos los campos marcados con * son requeridos

@@ -9,6 +9,7 @@ import { identifierName } from '@angular/compiler';
 import { InmueblesService } from 'src/app/core/services/inmueble.service';
 import { Inmueble } from 'src/app/models/inmueble';
 import { Area } from 'src/app/models/Area';
+import { AreasService } from 'src/app/core/services/areas.service';
 
 
 @Component({
@@ -31,6 +32,7 @@ export class InmueblesComponent {
   isModalAdd = true;
   inmueble!: Inmueble;
   inmuebles: Inmueble[] = [];
+  areas: Area[] = [];
   inmuebleFilter: Inmueble[] = [];
   imagenAmpliada: string | null = null;
 
@@ -40,10 +42,34 @@ export class InmueblesComponent {
     private mensajeService: MensajeService,
     private formBuilder: FormBuilder,
     public inmueblesService: InmueblesService,
+    public areasService: AreasService
   ) {
     this.inmueblesService.refreshListInmuebles.subscribe(() => this.getInmuebles());
     this.getInmuebles();
     this.creteForm();
+    this.getAreas();
+  }
+  getAreas() {
+    this.isLoading = LoadingStates.trueLoading;
+    this.areasService.getAll().subscribe({
+      next: (dataFromAPI) => {
+        this.areas = dataFromAPI;
+      },
+    });
+  }
+
+  getInmuebles() {
+    this.isLoading = LoadingStates.trueLoading;
+    this.inmueblesService.getAll().subscribe({
+      next: (dataFromAPI) => {
+        this.inmuebles = dataFromAPI;
+        this.inmuebleFilter = this.inmuebles;
+        this.isLoading = LoadingStates.falseLoading;
+      },
+      error: () => {
+        this.isLoading = LoadingStates.errorLoading;
+      },
+    });
   }
 
   creteForm() {
@@ -62,7 +88,7 @@ export class InmueblesComponent {
       descripcion: ['', [Validators.required]],
       imagenBase64: [''],
       qrBase64: [''],
-      areasDeResgualdo: ['', [Validators.required]],
+      areasDeResgualdo: [null, Validators.required]
     });
   }
 
@@ -71,19 +97,6 @@ export class InmueblesComponent {
     this.inmueblesForm.reset();
   }
   
-  getInmuebles() {
-    this.isLoading = LoadingStates.trueLoading;
-    this.inmueblesService.getAll().subscribe({
-      next: (dataFromAPI) => {
-        this.inmuebles = dataFromAPI;
-        this.inmuebleFilter = this.inmuebles;
-        this.isLoading = LoadingStates.falseLoading;
-      },
-      error: () => {
-        this.isLoading = LoadingStates.errorLoading;
-      },
-    });
-  }
   setDataModalUpdate(dto: Inmueble) {
     this.isModalAdd = false;
     this.idUpdate = dto.id;
@@ -95,8 +108,9 @@ export class InmueblesComponent {
       descripcion: dto.descripcion,
       imagenBase64: '',
       QrBase64: '',
-      areasDeResgualdo: dto.id,
+      areasDeResgualdo: dto.area ? dto.area.id : null,
     });
+    console.log(this.inmueblesForm)
   }
   
   editarInmueble() {
@@ -194,11 +208,10 @@ export class InmueblesComponent {
 
   async generarID() {
     const nombreControl = this.inmueblesForm.get('nombre');
-    const areaRespaldoControl = this.inmueblesForm.get('areasDeResgualdo');
   
-    if (nombreControl && areaRespaldoControl) {
+    if (nombreControl ) {
       const nombre = nombreControl.value.toUpperCase();
-      const areaRespaldo = areaRespaldoControl.value.toUpperCase();
+     
       const letraAleatoria = String.fromCharCode(65 + Math.floor(Math.random() * 26)).toUpperCase();
       const numerosAleatorios = Array.from({ length: 3 }, () => Math.floor(Math.random() * 10)).join('');
   
@@ -210,7 +223,7 @@ export class InmueblesComponent {
       const fechaActual = `${dia}${mes}${año}`;
   
       // Generar el ID con prefijo "MAG" y fecha al final
-      const codigo = `MAG${nombre.slice(0, 3)}${areaRespaldo.slice(0, 3)}${letraAleatoria}${numerosAleatorios}${fechaActual}`;
+      const codigo = `MAG${nombre.slice(0, 3)}${letraAleatoria}${numerosAleatorios}${fechaActual}`;
       
       const qr = QRCode(0, 'H');
       qr.addData(codigo);
@@ -233,11 +246,22 @@ export class InmueblesComponent {
     const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
     const qrBase64 = this.inmueblesForm.get('qrBase64')?.value;
     const codigo = this.inmueblesForm.get('idGenerado')?.value; // Usar idGenerado en lugar de codigo
-    const area = this.inmueblesForm.get('areasDeResgualdo')?.value;
-  console.log(this.inmueble)
-    this.inmueble.area = { id: area } as Area;
+    const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
+  
+    // Buscar el nombre del área seleccionada
+    const areaSeleccionada = this.areas.find(area => area.id === areaId);
+    if (!areaSeleccionada) {
+      this.mensajeService.mensajeError('El área de resguardo seleccionada no es válida.');
+      return;
+    }
+  
+    // Crear el objeto inmueble con el área completa
+    const inmuebleSinId = { ...this.inmueble, area: areaSeleccionada };
+    
+    console.log(inmuebleSinId);
+  
     if (imagenBase64 && qrBase64) {
-      const formData = { ...this.inmueble, imagenBase64, qrBase64}; // Utilizar idGenerado como el valor del código
+      const formData = { ...inmuebleSinId, imagenBase64, qrBase64 }; // Utilizar idGenerado como el valor del código
       this.spinnerService.show();
       this.inmueblesService.post(formData).subscribe({
         next: () => {
@@ -258,6 +282,7 @@ export class InmueblesComponent {
       );
     }
   }
+  
   
   
   
