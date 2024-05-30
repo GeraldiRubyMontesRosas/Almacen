@@ -9,12 +9,12 @@
     <div class="card">
       <div class="card-body border-bottom py-3">
         <div class="d-flex align-items-center">
-          <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#modal-inmuebles">
+          <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#modal-inmuebles" (click)="handleChangeAdd()">
             <i class="ti ti-plus me-1"></i>Agregar
           </button>
           <div class="ms-auto d-flex align-items-center">
             <div class="input-icon">
-              <input #searchItem class="form-control form-control-rounded" placeholder="Buscar" type="text" />
+              <input #searchItem class="form-control form-control-rounded" placeholder="Buscar" type="text"  (input)="handleChangeSearch($event)"/>
               <span class="input-icon-addon">
                 <i class="ti ti-search"></i>
               </span>
@@ -47,25 +47,55 @@
                 <th style="text-transform: none; font-size: inherit" class="text-center">
                   #
                 </th>
-                <th style="text-transform: none; font-size: inherit">Talla</th>
+                <th style="text-transform: none; font-size: inherit">id</th>
+                <th style="text-transform: none; font-size: inherit">Nombre</th>
+                <th style="text-transform: none; font-size: inherit" class="w-1">
+                  Cantidad
+                </th>
+                <th style="text-transform: none; font-size: inherit" class="w-1">
+                  Imagen
+                </th>
+                <th style="text-transform: none; font-size: inherit" class="w-1">
+                  Qr
+                </th>
                 <th style="text-transform: none; font-size: inherit" class="w-1">
                   Acciones
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr *ngFor="
+              let inmueble of inmuebleFilter | paginate : configPaginator;
+              let pointIndex = index
+            ">
                 <td class="text-center">
-
+                  {{
+                    configPaginator.itemsPerPage *
+                      (configPaginator.currentPage - 1) +
+                      pointIndex +
+                      1
+                  }}
                 </td>
-                <td class="text-muted"></td>
+                <td class="text-muted">{{ inmueble.codigo }}</td>
+                <td class="text-muted">{{ inmueble.nombre }}</td>
+                <td class="text-muted">{{ inmueble.cantidad }}</td>
+                <td class="text-muted">
+                  <div class="flex justify-center items-center">
+                      <img src="{{ inmueble.imagen }}" alt="Foto de {{ inmueble.imagen }}" width="50" height="50" (click)="mostrarImagenAmpliada(inmueble.imagen)" />
+                  </div>
+              </td>
+              <td class="text-muted">
+                <div class="flex justify-center items-center">
+                    <img src="{{ inmueble.qr }}" alt="Foto de {{ inmueble.qr }}" width="50" height="50" (click)="mostrarImagenAmpliada(inmueble.qr)" />
+                </div>
+            </td>
                 <td>
                   <div class="d-flex justify-content-between">
                     <button class="btn btn-warning btn-icon btn-sm" data-bs-toggle="modal"
-                      data-bs-target="#modal-talla">
+                      data-bs-target="#modal-inmuebles"  (click)="setDataModalUpdate(inmueble)">
                       <i class="ti ti-edit"></i>
                     </button>
-                    <button class="btn btn-danger btn-icon btn-sm">
+                    <button class="btn btn-danger btn-icon btn-sm" (click)="deleteItem(inmueble.id, inmueble.nombre)">
                       <i class="ti ti-eraser"></i>
                     </button>
                   </div>
@@ -75,7 +105,7 @@
           </table>
         </div>
 
-        <app-no-results *ngSwitchCase="4"></app-no-results>
+        <app-no-results *ngSwitchCase="4">{{ inmuebleFilter.length }}</app-no-results>
       </ng-container>
 
       <div class="card-footer d-flex align-items-center">
@@ -83,7 +113,7 @@
           Total de registros: <b></b>
         </p>
         <div class="m-0 ms-auto">
-          <pagination-controls previousLabel="" nextLabel="">
+          <pagination-controls (pageChange)="onPageChange($event)" previousLabel="" nextLabel="">
           </pagination-controls>
         </div>
       </div>
@@ -100,12 +130,34 @@
         </h5>
         <button #closebutton type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form [formGroup]="inmueblesForm">
+      <form [formGroup]="inmueblesForm" (ngSubmit)="submit()">
         <div class="modal-body">
           <div class="">
             <div class="row">
               <div class="col-lg-12">
-
+                <div class="mb-3">
+                  <label class="form-label">Id*:</label>
+                  <input type="text" class="form-control" formControlName="codigo" />
+                  <div *ngIf="inmueblesForm.get('codigo')?.touched" class="error-message">
+                    <div *ngIf="
+                      inmueblesForm.get('codigo')?.hasError('required')
+                    ">
+                      La talla es obligatoria
+                    </div>
+                    <div *ngIf="
+                      inmueblesForm.get('codigo')?.hasError('minlength')
+                    ">
+                      La talla debe tener al menos 3 caracteres
+                    </div>
+                    <div *ngIf="
+                      inmueblesForm.get('codigo')?.hasError('maxlength')
+                    ">
+                      <p style="color: red">
+                        La talla debe tener maximo 22 caracteres
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <div class="mb-3">
                   <label class="form-label">Nombre*:</label>
                   <input type="text" class="form-control" formControlName="nombre" />
@@ -113,18 +165,18 @@
                     <div *ngIf="
                       inmueblesForm.get('nombre')?.hasError('required')
                     ">
-                      La talla es obligatoria
+                     El nombre es obligatoria
                     </div>
                     <div *ngIf="
                       inmueblesForm.get('nombre')?.hasError('minlength')
                     ">
-                      La talla debe tener al menos 3 caracteres
+                      El nombre debe tener al menos 3 caracteres
                     </div>
                     <div *ngIf="
                       inmueblesForm.get('nombre')?.hasError('maxlength')
                     ">
                       <p style="color: red">
-                        La talla debe tener maximo 22 caracteres
+                        El nombre debe tener maximo 22 caracteres
                       </p>
                     </div>
                   </div>
@@ -167,12 +219,12 @@
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-label">Area De Respaldo*:</label>
+                  <label class="form-label">Area de resguardo*:</label>
                   <select class="form-select" formControlName="areasDeResgualdo">
                     <option selected>--Seleccione un area de respaldo--</option>
-                    <option>Oficina</option>
-                    <option>Sala de juntas</option>
-                    <option>Baño A</option>
+                    <option value="1">Oficina</option>
+                    <option value="1">Sala de juntas</option>
+                    <option value="1">Baño A</option>
                   </select>
                   <div *ngIf="inmueblesForm.get('areasDeResgualdo')?.touched" class="error-message">
                     <div *ngIf="
@@ -197,5 +249,17 @@
         </div>
       </form>
     </div>
+  </div>
+</div>
+<div class="modal modal-blur" id="modal-imagen-ampliada" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" style="background: rgba(0, 0, 0, 0.2)">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <button type="button" class="btn-close" aria-label="Close" (click)="cerrarModal()"></button>
+          </div>
+          <div class="modal-body">
+              <img *ngIf="imagenAmpliada" [src]="imagenAmpliada" alt="Imagen Ampliada" class="w-100" />
+          </div>
+      </div>
   </div>
 </div>

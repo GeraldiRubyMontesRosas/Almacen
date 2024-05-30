@@ -6,6 +6,9 @@ import { MensajeService } from 'src/app/core/services/mensaje.service';
 import { LoadingStates } from 'src/app/global/global';
 import * as QRCode from 'qrcode-generator'; 
 import { identifierName } from '@angular/compiler';
+import { InmueblesService } from 'src/app/core/services/inmueble.service';
+import { Inmueble } from 'src/app/models/inmueble';
+import { Area } from 'src/app/models/Area';
 
 
 @Component({
@@ -17,26 +20,36 @@ export class InmueblesComponent {
   @ViewChild('searchItem') searchItem!: ElementRef;
   @ViewChild('closebutton') closebutton!: ElementRef;
   public isUpdatingfoto: boolean = false;
-
+  public imgPreview: string = '';
+  public QrPreview: string = '';
   inmueblesForm!: FormGroup;
-  qrCodeBase64!: string;
-
+  QrBase64!: string;
+  public isUpdatingImg: boolean = false;
+  public isUpdatingEmblema: boolean = false;
   isLoading = LoadingStates.neutro;
   idUpdate!: number;
   isModalAdd = true;
+  inmueble!: Inmueble;
+  inmuebles: Inmueble[] = [];
+  inmuebleFilter: Inmueble[] = [];
+  imagenAmpliada: string | null = null;
 
   constructor(
     @Inject('CONFIG_PAGINATOR') public configPaginator: PaginationInstance,
     private spinnerService: NgxSpinnerService,
     private mensajeService: MensajeService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    public inmueblesService: InmueblesService,
   ) {
+    this.inmueblesService.refreshListInmuebles.subscribe(() => this.getInmuebles());
+    this.getInmuebles();
     this.creteForm();
   }
 
   creteForm() {
     this.inmueblesForm = this.formBuilder.group({
-      codigo: [null],
+      id: [null],
+      codigo: [''],
       nombre: [
         '',
         [
@@ -48,6 +61,7 @@ export class InmueblesComponent {
       cantidad: ['', [Validators.maxLength(10), Validators.required]],
       descripcion: ['', [Validators.required]],
       imagenBase64: [''],
+      qrBase64: [''],
       areasDeResgualdo: ['', [Validators.required]],
     });
   }
@@ -55,6 +69,108 @@ export class InmueblesComponent {
   resetForm() {
     this.closebutton.nativeElement.click();
     this.inmueblesForm.reset();
+  }
+  
+  getInmuebles() {
+    this.isLoading = LoadingStates.trueLoading;
+    this.inmueblesService.getAll().subscribe({
+      next: (dataFromAPI) => {
+        this.inmuebles = dataFromAPI;
+        this.inmuebleFilter = this.inmuebles;
+        this.isLoading = LoadingStates.falseLoading;
+      },
+      error: () => {
+        this.isLoading = LoadingStates.errorLoading;
+      },
+    });
+  }
+  setDataModalUpdate(dto: Inmueble) {
+    this.isModalAdd = false;
+    this.idUpdate = dto.id;
+    this.inmueblesForm.patchValue({
+      id: dto.id,
+      codigo: dto.codigo,
+      nombre: dto.nombre,
+      cantidad: dto.cantidad,
+      descripcion: dto.descripcion,
+      imagenBase64: '',
+      QrBase64: '',
+      areasDeResgualdo: dto.id,
+    });
+  }
+  
+  editarInmueble() {
+    this.inmueble = this.inmueblesForm.value as Inmueble;
+    const inmueble = this.inmueblesForm.get('id')?.value;
+    const area = this.inmueblesForm.get('areasDeResgualdo')?.value;
+    const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
+    const QrBase64 = this.inmueblesForm.get('QrBase64')?.value;
+    console.log(imagenBase64);
+    console.log(QrBase64);
+
+    this.imgPreview = '';
+    this.QrPreview = '';
+
+    this.inmueble.area = { id: area } as Area;
+
+    if (!imagenBase64 && !QrBase64) {
+      const formData = { ...this.inmueble };
+
+      this.spinnerService.show();
+
+      this.inmueblesService.put(inmueble, formData).subscribe({
+        next: () => {
+          this.spinnerService.hide();
+          this.mensajeService.mensajeExito(
+            'Inmueble actualizado correctamente'
+          );
+          this.resetForm();
+          this.configPaginator.currentPage = 1;
+        },
+        error: (error) => {
+          this.spinnerService.hide();
+          this.mensajeService.mensajeError(error);
+        },
+      });
+    } else if (imagenBase64 && QrBase64) {
+      const formData = { ...this.inmueble, imagenBase64, QrBase64 };
+      this.spinnerService.show();
+
+      this.inmueblesService.put(inmueble, formData).subscribe({
+        next: () => {
+          this.spinnerService.hide();
+          this.mensajeService.mensajeExito(
+            'Candidato actualizado correctamente'
+          );
+          this.resetForm();
+          this.configPaginator.currentPage = 1;
+        },
+        error: (error) => {
+          this.spinnerService.hide();
+          this.mensajeService.mensajeError(error);
+        },
+      });
+    } else {
+      console.error(
+        'Error: No se encontró una representación válida en base64 de la imagen.'
+      );
+    }
+  }
+
+  deleteItem(id: number, nameItem: string) {
+    this.mensajeService.mensajeAdvertencia(
+      `¿Estás seguro de eliminar el inmueble: ${nameItem}?`,
+      () => {
+        this.inmueblesService.delete(id).subscribe({
+          next: () => {
+            this.mensajeService.mensajeExito('Candidato borrado correctamente');
+            this.configPaginator.currentPage = 1;
+            this.searchItem.nativeElement.value = '';
+          },
+          error: (error) => this.mensajeService.mensajeError(error),
+        });
+      }
+    );
   }
   onFileChange(event: Event) {
     const inputElement = event.target as HTMLInputElement;
@@ -79,23 +195,123 @@ export class InmueblesComponent {
   async generarID() {
     const nombreControl = this.inmueblesForm.get('nombre');
     const areaRespaldoControl = this.inmueblesForm.get('areasDeResgualdo');
-
+  
     if (nombreControl && areaRespaldoControl) {
       const nombre = nombreControl.value.toUpperCase();
       const areaRespaldo = areaRespaldoControl.value.toUpperCase();
       const letraAleatoria = String.fromCharCode(65 + Math.floor(Math.random() * 26)).toUpperCase();
       const numerosAleatorios = Array.from({ length: 3 }, () => Math.floor(Math.random() * 10)).join('');
-      const idGenerado = `${nombre.slice(0, 3)}${areaRespaldo.slice(0, 3)}${letraAleatoria}${numerosAleatorios}`;
+  
+      // Obtener la fecha actual en formato DDMMYYYY
+      const fecha = new Date();
+      const dia = String(fecha.getDate()).padStart(2, '0');
+      const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+      const año = fecha.getFullYear();
+      const fechaActual = `${dia}${mes}${año}`;
+  
+      // Generar el ID con prefijo "MAG" y fecha al final
+      const codigo = `MAG${nombre.slice(0, 3)}${areaRespaldo.slice(0, 3)}${letraAleatoria}${numerosAleatorios}${fechaActual}`;
       
-      const qr = QRCode(0, 'H'); 
-      qr.addData(idGenerado); 
-      qr.make(); 
+      const qr = QRCode(0, 'H');
+      qr.addData(codigo);
+      qr.make();
+  
+      const qrDataURL = qr.createDataURL(4);
+      const qrBase64 = qrDataURL.split(',')[1]; // Extraer solo la parte base64
+  
+      console.log('idGenerado:', codigo);
+      console.log('qrBase64:', qrBase64);
+  
+      // Asignar el valor de idGenerado y qrBase64 al formulario
+      this.inmueblesForm.patchValue({ codigo: codigo, qrBase64: qrBase64 });
+    }
+  }
+  
+  
+  agregar() {
+    this.inmueble = this.inmueblesForm.value as Inmueble;
+    const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
+    const qrBase64 = this.inmueblesForm.get('qrBase64')?.value;
+    const codigo = this.inmueblesForm.get('idGenerado')?.value; // Usar idGenerado en lugar de codigo
+    const area = this.inmueblesForm.get('areasDeResgualdo')?.value;
+  console.log(this.inmueble)
+    this.inmueble.area = { id: area } as Area;
+    if (imagenBase64 && qrBase64) {
+      const formData = { ...this.inmueble, imagenBase64, qrBase64}; // Utilizar idGenerado como el valor del código
+      this.spinnerService.show();
+      this.inmueblesService.post(formData).subscribe({
+        next: () => {
+          this.spinnerService.hide();
+          this.mensajeService.mensajeExito('Inmueble guardado correctamente');
+          this.resetForm();
+          this.configPaginator.currentPage = 1;
+        },
+        error: (error) => {
+          this.spinnerService.hide();
+          this.mensajeService.mensajeError(error);
+        },
+      });
+    } else {
+      this.spinnerService.hide();
+      this.mensajeService.mensajeError(
+        'Error: No se encontró una representación válida de la imagen o QR.'
+      );
+    }
+  }
+  
+  
+  
 
-      this.qrCodeBase64 = qr.createDataURL(4); 
-
-      console.log(idGenerado);
-      console.log(this.qrCodeBase64); 
+  handleChangeAdd() {
+    this.isUpdatingImg = false;
+    this.isUpdatingEmblema = false;
+    if (this.inmueblesForm) {
+      this.inmueblesForm.reset();
+      const estatusControl = this.inmueblesForm.get('estatus');
+      if (estatusControl) {
+        estatusControl.setValue(true);
+      }
+      this.isModalAdd = true;
     }
   }
 
+  submit() {
+    if (this.isModalAdd === false) {
+      this.editarInmueble();
+    } else {
+      this.agregar();
+    }
+  }
+
+  mostrarImagenAmpliada(rutaImagen: string) {
+    this.imagenAmpliada = rutaImagen;
+    const modal = document.getElementById('modal-imagen-ampliada');
+    if (modal) {
+      modal.classList.add('show');
+      modal.style.display = 'block';
+    }
+  }
+  cerrarModal() {
+    this.imagenAmpliada = null;
+    const modal = document.getElementById('modal-imagen-ampliada');
+    if (modal) {
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+    }
+  }
+  handleChangeSearch(event: any) {
+    const inputValue = event.target.value;
+    const valueSearch = inputValue.toLowerCase();
+
+    this.inmuebleFilter = this.inmuebles.filter((inmueble) =>
+      inmueble.nombre.toLowerCase().includes(valueSearch) ||
+      inmueble.codigo.toLowerCase().includes(valueSearch) ||
+      inmueble.cantidad.toString().includes(valueSearch) 
+    );
+
+    this.configPaginator.currentPage = 1;
+  }
+  onPageChange(number: number) {
+    this.configPaginator.currentPage = number;
+  }
 }
