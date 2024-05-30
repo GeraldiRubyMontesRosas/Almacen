@@ -399,4 +399,30 @@ export class InmueblesComponent {
     a.click();
     window.URL.revokeObjectURL(url);
   }
+
+  mostrarImagenAmpliada2(urlImagen: string) {
+    const imagen = new Image();
+    imagen.onload = () => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        
+        if (context) {
+            canvas.width = imagen.width;
+            canvas.height = imagen.height;
+            context.drawImage(imagen, 0, 0);
+
+            const impresora = window.open('', '_blank');
+            if (impresora) {
+                impresora.document.write(`<img src="${urlImagen}" style="max-width: 100%; max-height: 100%;" />`);
+                impresora.document.write('<script>window.print();</script>');
+            } else {
+                console.error('No se pudo abrir la ventana de impresión.');
+            }
+        } else {
+            console.error('No se pudo obtener el contexto 2D del lienzo.');
+        }
+    };
+    imagen.src = urlImagen;
+}
+
 }
