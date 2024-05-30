@@ -35,6 +35,7 @@ export class AreaComponent {
     private formBuilder: FormBuilder,
     private areasService : AreasService
   ) { 
+    this.areasService.refreshListAreas.subscribe(() => this.getAreas());
     this.getAreas();
     this.creteForm();
   }
