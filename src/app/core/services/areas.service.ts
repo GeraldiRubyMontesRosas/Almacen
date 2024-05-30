@@ -24,7 +24,11 @@ export class AreasService {
   }
 
   getById(id: number){
-    return this.http.get<Area>(`${this.route}/obtener-datos`);
+    return this.http.get<Area>(`${this.route}/obtener-por-id`);
+  }
+
+  getAll(){
+    return this.http.get<Area[]>(`${this.route}/obtener-todos`);
   }
 
   post(dto : Area) {
