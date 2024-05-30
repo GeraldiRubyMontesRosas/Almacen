@@ -4,13 +4,12 @@ import { PaginationInstance } from 'ngx-pagination';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MensajeService } from 'src/app/core/services/mensaje.service';
 import { LoadingStates } from 'src/app/global/global';
-import * as QRCode from 'qrcode-generator'; 
+import * as QRCode from 'qrcode-generator';
 import { identifierName } from '@angular/compiler';
 import { InmueblesService } from 'src/app/core/services/inmueble.service';
 import { Inmueble } from 'src/app/models/inmueble';
 import { Area } from 'src/app/models/Area';
 import { AreasService } from 'src/app/core/services/areas.service';
-
 
 @Component({
   selector: 'app-inmuebles',
@@ -35,6 +34,10 @@ export class InmueblesComponent {
   areas: Area[] = [];
   inmuebleFilter: Inmueble[] = [];
   imagenAmpliada: string | null = null;
+  estatusBtn = true;
+  verdadero = 'Activo';
+  falso = 'Inactivo';
+  estatusTag = this.verdadero;
 
   constructor(
     @Inject('CONFIG_PAGINATOR') public configPaginator: PaginationInstance,
@@ -44,10 +47,15 @@ export class InmueblesComponent {
     public inmueblesService: InmueblesService,
     public areasService: AreasService
   ) {
-    this.inmueblesService.refreshListInmuebles.subscribe(() => this.getInmuebles());
+    this.inmueblesService.refreshListInmuebles.subscribe(() =>
+      this.getInmuebles()
+    );
     this.getInmuebles();
     this.creteForm();
     this.getAreas();
+  }
+  setEstatus() {
+    this.estatusTag = this.estatusBtn ? this.verdadero : this.falso;
   }
   getAreas() {
     this.isLoading = LoadingStates.trueLoading;
@@ -88,7 +96,8 @@ export class InmueblesComponent {
       descripcion: ['', [Validators.required]],
       imagenBase64: [''],
       qrBase64: [''],
-      areasDeResgualdo: [null, Validators.required]
+      areasDeResgualdo: [null, Validators.required],
+      estatus: [true],
     });
   }
 
@@ -96,7 +105,7 @@ export class InmueblesComponent {
     this.closebutton.nativeElement.click();
     this.inmueblesForm.reset();
   }
-  
+
   setDataModalUpdate(dto: Inmueble) {
     this.isModalAdd = false;
     this.idUpdate = dto.id;
@@ -108,11 +117,12 @@ export class InmueblesComponent {
       descripcion: dto.descripcion,
       imagenBase64: '',
       QrBase64: '',
+      estatus: dto.estatus,
       areasDeResgualdo: dto.area ? dto.area.id : null,
     });
-    console.log(this.inmueblesForm)
+    console.log(this.inmueblesForm);
   }
-  
+
   editarInmueble() {
     this.inmueble = this.inmueblesForm.value as Inmueble;
     const inmueble = this.inmueblesForm.get('id')?.value;
@@ -208,58 +218,66 @@ export class InmueblesComponent {
 
   async generarID() {
     const nombreControl = this.inmueblesForm.get('nombre');
-  
-    if (nombreControl ) {
+
+    if (nombreControl) {
       const nombre = nombreControl.value.toUpperCase();
-     
-      const letraAleatoria = String.fromCharCode(65 + Math.floor(Math.random() * 26)).toUpperCase();
-      const numerosAleatorios = Array.from({ length: 3 }, () => Math.floor(Math.random() * 10)).join('');
-  
+
+      const letraAleatoria = String.fromCharCode(
+        65 + Math.floor(Math.random() * 26)
+      ).toUpperCase();
+      const numerosAleatorios = Array.from({ length: 3 }, () =>
+        Math.floor(Math.random() * 10)
+      ).join('');
+
       // Obtener la fecha actual en formato DDMMYYYY
       const fecha = new Date();
       const dia = String(fecha.getDate()).padStart(2, '0');
       const mes = String(fecha.getMonth() + 1).padStart(2, '0');
       const año = fecha.getFullYear();
       const fechaActual = `${dia}${mes}${año}`;
-  
+
       // Generar el ID con prefijo "MAG" y fecha al final
-      const codigo = `MAG${nombre.slice(0, 3)}${letraAleatoria}${numerosAleatorios}${fechaActual}`;
-      
+      const codigo = `MAG${nombre.slice(
+        0,
+        3
+      )}${letraAleatoria}${numerosAleatorios}${fechaActual}`;
+
       const qr = QRCode(0, 'H');
       qr.addData(codigo);
       qr.make();
-  
+
       const qrDataURL = qr.createDataURL(4);
       const qrBase64 = qrDataURL.split(',')[1]; // Extraer solo la parte base64
-  
+
       console.log('idGenerado:', codigo);
       console.log('qrBase64:', qrBase64);
-  
+
       // Asignar el valor de idGenerado y qrBase64 al formulario
       this.inmueblesForm.patchValue({ codigo: codigo, qrBase64: qrBase64 });
     }
   }
-  
-  
+
   agregar() {
     this.inmueble = this.inmueblesForm.value as Inmueble;
     const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
     const qrBase64 = this.inmueblesForm.get('qrBase64')?.value;
     const codigo = this.inmueblesForm.get('idGenerado')?.value; // Usar idGenerado en lugar de codigo
     const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
-  
+
     // Buscar el nombre del área seleccionada
-    const areaSeleccionada = this.areas.find(area => area.id === areaId);
+    const areaSeleccionada = this.areas.find((area) => area.id === areaId);
     if (!areaSeleccionada) {
-      this.mensajeService.mensajeError('El área de resguardo seleccionada no es válida.');
+      this.mensajeService.mensajeError(
+        'El área de resguardo seleccionada no es válida.'
+      );
       return;
     }
-  
+
     // Crear el objeto inmueble con el área completa
     const inmuebleSinId = { ...this.inmueble, area: areaSeleccionada };
-    
+
     console.log(inmuebleSinId);
-  
+
     if (imagenBase64 && qrBase64) {
       const formData = { ...inmuebleSinId, imagenBase64, qrBase64 }; // Utilizar idGenerado como el valor del código
       this.spinnerService.show();
@@ -282,10 +300,6 @@ export class InmueblesComponent {
       );
     }
   }
-  
-  
-  
-  
 
   handleChangeAdd() {
     this.isUpdatingImg = false;
@@ -328,10 +342,11 @@ export class InmueblesComponent {
     const inputValue = event.target.value;
     const valueSearch = inputValue.toLowerCase();
 
-    this.inmuebleFilter = this.inmuebles.filter((inmueble) =>
-      inmueble.nombre.toLowerCase().includes(valueSearch) ||
-      inmueble.codigo.toLowerCase().includes(valueSearch) ||
-      inmueble.cantidad.toString().includes(valueSearch) 
+    this.inmuebleFilter = this.inmuebles.filter(
+      (inmueble) =>
+        inmueble.nombre.toLowerCase().includes(valueSearch) ||
+        inmueble.codigo.toLowerCase().includes(valueSearch) ||
+        inmueble.cantidad.toString().includes(valueSearch)
     );
 
     this.configPaginator.currentPage = 1;
