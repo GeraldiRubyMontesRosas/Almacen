@@ -68,6 +68,17 @@ export class AreaComponent {
           ),
         ],
       ],
+      /* responsable: [
+        '',
+        [
+          Validators.required,
+          Validators.maxLength(40),
+          Validators.minLength(2),
+          Validators.pattern(
+            /^([a-zA-ZÀ-ÿ\u00C0-\u00FF]{2})[a-zA-ZÀ-ÿ\u00C0-\u00FF ]+$/
+          ),
+        ],
+      ] */
     });
   }
 
