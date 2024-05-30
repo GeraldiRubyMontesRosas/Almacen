@@ -10,6 +10,7 @@ import { InmueblesService } from 'src/app/core/services/inmueble.service';
 import { Inmueble } from 'src/app/models/inmueble';
 import { Area } from 'src/app/models/Area';
 import { AreasService } from 'src/app/core/services/areas.service';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-inmuebles',
@@ -353,5 +354,49 @@ export class InmueblesComponent {
   }
   onPageChange(number: number) {
     this.configPaginator.currentPage = number;
+  }
+  exportarDatosAExcel() {
+    if (this.inmuebles.length === 0) {
+      console.warn('La lista de tallas está vacía. No se puede exportar.');
+      return;
+    }
+
+    const datosParaExportar = this.inmuebles.map((inmueble) => {
+      const estatus = inmueble.estatus ? 'Activo' : 'Inactivo';
+      return {
+        '#': inmueble.id,
+        Nombre: inmueble.nombre,
+        Codigo: inmueble.codigo,
+        Cantidad: inmueble.cantidad,
+        Descripcion: inmueble.descripcion,
+        Estatus: estatus,
+        AreasDeResgualdo: inmueble.area ? inmueble.area.nombre : null,
+      };
+    });
+
+    const worksheet: XLSX.WorkSheet =
+      XLSX.utils.json_to_sheet(datosParaExportar);
+    const workbook: XLSX.WorkBook = {
+      Sheets: { data: worksheet },
+      SheetNames: ['data'],
+    };
+    const excelBuffer: any = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    });
+
+    this.guardarArchivoExcel(excelBuffer, 'Inmuebles.xlsx');
+  }
+
+  guardarArchivoExcel(buffer: any, nombreArchivo: string) {
+    const data: Blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url: string = window.URL.createObjectURL(data);
+    const a: HTMLAnchorElement = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }
