@@ -68,7 +68,7 @@ export class AreaComponent {
           ),
         ],
       ],
-      /* responsable: [
+      responsable: [
         '',
         [
           Validators.required,
@@ -78,7 +78,8 @@ export class AreaComponent {
             /^([a-zA-ZÀ-ÿ\u00C0-\u00FF]{2})[a-zA-ZÀ-ÿ\u00C0-\u00FF ]+$/
           ),
         ],
-      ] */
+      ],
+      estatus:[true],
     });
   }
 
