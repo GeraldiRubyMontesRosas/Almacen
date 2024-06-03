@@ -1,1 +1,48 @@
-<p>traslados works!</p>
+
+<div class="traslados-container">
+    <h1>Gestión de Traslados</h1>
+  
+    <form class="traslados-form">
+      <div class="form-group">
+        <label for="origen">Origen:</label>
+        <input type="text" id="origen" name="origen" placeholder="Ingrese el origen">
+      </div>
+  
+      <div class="form-group">
+        <label for="destino">Destino:</label>
+        <input type="text" id="destino" name="destino" placeholder="Ingrese el destino">
+      </div>
+  
+      <div class="form-group">
+        <label for="fecha">Fecha:</label>
+        <input type="date" id="fecha" name="fecha">
+      </div>
+  
+      <button type="submit">Agregar Traslado</button>
+    </form>
+  
+
+    <table class="traslados-table">
+      <thead>
+        <tr>
+          <th>Origen</th>
+          <th>Destino</th>
+          <th>Fecha</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>Ejemplo Origen</td>
+          <td>Ejemplo Destino</td>
+          <td>2024-06-01</td>
+          <td>
+            <button>Editar</button>
+            <button>Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
