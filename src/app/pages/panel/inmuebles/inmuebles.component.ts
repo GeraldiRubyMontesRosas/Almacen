@@ -26,7 +26,7 @@ export class InmueblesComponent {
   inmueblesForm!: FormGroup;
   QrBase64!: string;
   public isUpdatingImg: boolean = false;
-  public isUpdatingEmblema: boolean = false;
+  public isUpdatingqr: boolean = false;
   isLoading = LoadingStates.neutro;
   idUpdate!: number;
   isModalAdd = true;
@@ -110,6 +110,14 @@ export class InmueblesComponent {
   setDataModalUpdate(dto: Inmueble) {
     this.isModalAdd = false;
     this.idUpdate = dto.id;
+    const inmueble = this.inmuebleFilter.find(
+      (inmueble) => inmueble.id === dto.id
+    );
+    this.imgPreview = inmueble!.imagen;
+    this.QrPreview = inmueble!.qr;
+    this.isUpdatingImg = true;
+    this.isUpdatingqr = true;
+
     this.inmueblesForm.patchValue({
       id: dto.id,
       codigo: dto.codigo,
@@ -121,7 +129,7 @@ export class InmueblesComponent {
       estatus: dto.estatus,
       areasDeResgualdo: dto.area ? dto.area.id : null,
     });
-    console.log(this.inmueblesForm);
+    console.log(dto);
   }
 
   editarInmueble() {
@@ -130,8 +138,16 @@ export class InmueblesComponent {
     const area = this.inmueblesForm.get('areasDeResgualdo')?.value;
     const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
     const QrBase64 = this.inmueblesForm.get('QrBase64')?.value;
+    const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
     console.log(imagenBase64);
     console.log(QrBase64);
+    const areaSeleccionada = this.areas.find((area) => area.id === areaId);
+    if (!areaSeleccionada) {
+      this.mensajeService.mensajeError(
+        'El área de resguardo seleccionada no es válida.'
+      );
+      return;
+    }
 
     this.imgPreview = '';
     this.QrPreview = '';
@@ -139,7 +155,10 @@ export class InmueblesComponent {
     this.inmueble.area = { id: area } as Area;
 
     if (!imagenBase64 && !QrBase64) {
-      const formData = { ...this.inmueble };
+      // Crear el objeto inmueble con el área completa
+      const formData = { ...this.inmueble, area: areaSeleccionada };
+
+      console.log(formData);
 
       this.spinnerService.show();
 
@@ -157,8 +176,13 @@ export class InmueblesComponent {
           this.mensajeService.mensajeError(error);
         },
       });
-    } else if (imagenBase64 && QrBase64) {
-      const formData = { ...this.inmueble, imagenBase64, QrBase64 };
+    } else if (imagenBase64) {
+      const formData = {
+        ...this.inmueble,
+        imagenBase64,
+        QrBase64,
+        area: areaSeleccionada,
+      };
       this.spinnerService.show();
 
       this.inmueblesService.put(inmueble, formData).subscribe({
@@ -199,7 +223,7 @@ export class InmueblesComponent {
   }
   onFileChange(event: Event) {
     const inputElement = event.target as HTMLInputElement;
-
+    this.isUpdatingImg = false;
     if (inputElement.files && inputElement.files.length > 0) {
       const file = inputElement.files[0];
       const reader = new FileReader();
@@ -217,7 +241,7 @@ export class InmueblesComponent {
     }
   }
 
-  async generarID() {
+  async generarID2() {
     const nombreControl = this.inmueblesForm.get('nombre');
 
     if (nombreControl) {
@@ -259,6 +283,7 @@ export class InmueblesComponent {
   }
 
   agregar() {
+    this.generarID2();
     this.inmueble = this.inmueblesForm.value as Inmueble;
     const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
     const qrBase64 = this.inmueblesForm.get('qrBase64')?.value;
@@ -304,7 +329,7 @@ export class InmueblesComponent {
 
   handleChangeAdd() {
     this.isUpdatingImg = false;
-    this.isUpdatingEmblema = false;
+    this.isUpdatingqr = false;
     if (this.inmueblesForm) {
       this.inmueblesForm.reset();
       const estatusControl = this.inmueblesForm.get('estatus');
@@ -403,26 +428,27 @@ export class InmueblesComponent {
   mostrarImagenAmpliada2(urlImagen: string) {
     const imagen = new Image();
     imagen.onload = () => {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        
-        if (context) {
-            canvas.width = imagen.width;
-            canvas.height = imagen.height;
-            context.drawImage(imagen, 0, 0);
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
 
-            const impresora = window.open('', '_blank');
-            if (impresora) {
-                impresora.document.write(`<img src="${urlImagen}" style="max-width: 100%; max-height: 100%;" />`);
-                impresora.document.write('<script>window.print();</script>');
-            } else {
-                console.error('No se pudo abrir la ventana de impresión.');
-            }
+      if (context) {
+        canvas.width = imagen.width;
+        canvas.height = imagen.height;
+        context.drawImage(imagen, 0, 0);
+
+        const impresora = window.open('', '_blank');
+        if (impresora) {
+          impresora.document.write(
+            `<img src="${urlImagen}" style="max-width: 100%; max-height: 100%;" />`
+          );
+          impresora.document.write('<script>window.print();</script>');
         } else {
-            console.error('No se pudo obtener el contexto 2D del lienzo.');
+          console.error('No se pudo abrir la ventana de impresión.');
         }
+      } else {
+        console.error('No se pudo obtener el contexto 2D del lienzo.');
+      }
     };
     imagen.src = urlImagen;
-}
-
+  }
 }
