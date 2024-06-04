@@ -180,7 +180,7 @@ export class AreaComponent {
 
   exportarDatosAExcel() {
     if (this.areas.length === 0) {
-      console.warn('La lista de tallas está vacía. No se puede exportar.');
+      console.warn('La lista de areas está vacía. No se puede exportar.');
       return;
     }
 

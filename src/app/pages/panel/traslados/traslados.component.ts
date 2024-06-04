@@ -10,6 +10,7 @@ import { InmueblesService } from 'src/app/core/services/inmueble.service';
 import { Area } from 'src/app/models/Area';
 import { AreasService } from 'src/app/core/services/areas.service';
 
+import * as XLSX from 'xlsx';
 import * as QRCode from 'qrcode-generator';
 
 @Component({
@@ -46,7 +47,8 @@ export class TrasladosComponent {
     private mensajeService: MensajeService,
     private formBuilder: FormBuilder,
     public inmueblesService: InmueblesService,
-    public areasService: AreasService
+    public areasService: AreasService,
+    private fb: FormBuilder
   ) {
     this.inmueblesService.refreshListInmuebles.subscribe(() =>
       this.getInmuebles()
@@ -55,6 +57,7 @@ export class TrasladosComponent {
     this.creteForm();
     this.getAreas();
   }
+
   setEstatus() {
     this.estatusTag = this.estatusBtn ? this.verdadero : this.falso;
   }
@@ -353,5 +356,72 @@ export class TrasladosComponent {
   }
   onPageChange(number: number) {
     this.configPaginator.currentPage = number;
+  }
+  exportarDatosAExcel() {
+    if (this.areas.length === 0) {
+      console.warn('La lista de areas está vacía. No se puede exportar.');
+      return;
+    }
+
+    const datosParaExportar = this.areas.map((area) => {
+      const estatus = area.estatus ? 'Activo' : 'Inactivo';
+      return {
+        '#': area.id,
+        'Nombre de area': area.nombre,
+        Responsable: area.responsable,
+        Estatus: estatus,
+      };
+    });
+
+    const worksheet: XLSX.WorkSheet =
+      XLSX.utils.json_to_sheet(datosParaExportar);
+    const workbook: XLSX.WorkBook = {
+      Sheets: { data: worksheet },
+      SheetNames: ['data'],
+    };
+    const excelBuffer: any = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    });
+
+    this.guardarArchivoExcel(excelBuffer, 'Areas.xlsx');
+  }
+
+  guardarArchivoExcel(buffer: any, nombreArchivo: string) {
+    const data: Blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url: string = window.URL.createObjectURL(data);
+    const a: HTMLAnchorElement = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+  mostrarImagenAmpliada2(urlImagen: string) {
+    const imagen = new Image();
+    imagen.onload = () => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+
+      if (context) {
+        canvas.width = imagen.width;
+        canvas.height = imagen.height;
+        context.drawImage(imagen, 0, 0);
+
+        const impresora = window.open('', '_blank');
+        if (impresora) {
+          impresora.document.write(
+            `<img src="${urlImagen}" style="max-width: 100%; max-height: 100%;" />`
+          );
+          impresora.document.write('<script>window.print();</script>');
+        } else {
+          console.error('No se pudo abrir la ventana de impresión.');
+        }
+      } else {
+        console.error('No se pudo obtener el contexto 2D del lienzo.');
+      }
+    };
+    imagen.src = urlImagen;
   }
 }
