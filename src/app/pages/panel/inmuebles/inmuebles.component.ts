@@ -44,6 +44,7 @@ export class InmueblesComponent {
     floor: 0,
     ceil: 100
   };
+  public cameraActive: boolean = false;
 
   @ViewChild('video', { static: false })
   public video!: ElementRef;
@@ -88,7 +89,40 @@ export class InmueblesComponent {
     this.inmueblesForm.patchValue({
       imagenBase64 : base64Image
     });
+  }
 
+  toggleCamera() {
+    if (this.cameraActive) {
+      this.stopCamera();
+    } else {
+      this.startCamera();
+    }
+    this.cameraActive = !this.cameraActive;
+  }
+
+  startCamera() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        this.video.nativeElement.srcObject = stream;
+        this.video.nativeElement.play();
+
+        this.video.nativeElement.onloadedmetadata = () => {
+          this.canvas.nativeElement.width = this.video.nativeElement.videoWidth;
+          this.canvas.nativeElement.height = this.video.nativeElement.videoHeight;
+        };
+      });
+    }
+  }
+
+  stopCamera() {
+    let stream = this.video.nativeElement.srcObject as MediaStream;
+    if (stream) {
+      let tracks = stream.getTracks();
+      tracks.forEach(function(track) {
+        track.stop();
+      });
+      this.video.nativeElement.srcObject = null;
+    }
   }
 
   setEstatus() {

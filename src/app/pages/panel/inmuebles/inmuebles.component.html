@@ -191,8 +191,11 @@
                     </div>
                   </div>
                   <div class="col-lg-4">
-                    <video #video width="160" height="120" autoplay></video>
-                    <button (click)="capture()" class="btn btn-primary w-50">Capturar</button>
+                    <div *ngIf="cameraActive">
+                      <video #video width="160" height="120" autoplay></video>
+                      <button (click)="capture()" class="btn btn-primary w-50">Capturar</button>
+                    </div>
+                    <button class="btn btn-success" (click)="toggleCamera()">{{ cameraActive ? 'Detener' : 'Iniciar' }} Cámara</button>
                     <canvas #canvas style="display:none;"></canvas>
                   </div>
                 </div>
