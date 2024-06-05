@@ -40,6 +40,12 @@ export class InmueblesComponent {
   falso = 'Inactivo';
   estatusTag = this.verdadero;
 
+  @ViewChild('video', { static: false })
+  public video!: ElementRef;
+  @ViewChild('canvas', { static: false })
+  public canvas!: ElementRef;
+  public captures: Array<any> = [];
+
   constructor(
     @Inject('CONFIG_PAGINATOR') public configPaginator: PaginationInstance,
     private spinnerService: NgxSpinnerService,
@@ -55,6 +61,31 @@ export class InmueblesComponent {
     this.creteForm();
     this.getAreas();
   }
+  public ngAfterViewInit() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        this.video.nativeElement.srcObject = stream;
+        this.video.nativeElement.play();
+
+        // Esperar a que el video esté listo para obtener las dimensiones
+        this.video.nativeElement.onloadedmetadata = () => {
+          this.canvas.nativeElement.width = this.video.nativeElement.videoWidth;
+          this.canvas.nativeElement.height = this.video.nativeElement.videoHeight;
+        };
+      });
+    }
+  }
+
+  public capture() {
+    const context = this.canvas.nativeElement.getContext('2d');
+    context.drawImage(this.video.nativeElement, 0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
+    const base64Image = this.canvas.nativeElement.toDataURL('image/png').split(',')[1];
+    this.inmueblesForm.patchValue({
+      imagenBase64 : base64Image
+    });
+    
+  }
+
   setEstatus() {
     this.estatusTag = this.estatusBtn ? this.verdadero : this.falso;
   }

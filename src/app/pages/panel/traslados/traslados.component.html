@@ -205,9 +205,106 @@
           <div class="row">
             <div class="col-lg-12">
               <div class="mb-3">
+                <label class="form-label">Nombre*:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="nombre"
+                />
+                <div
+                  *ngIf="inmueblesForm.get('nombre')?.touched"
+                  class="error-message"
+                >
+                  <div
+                    *ngIf="inmueblesForm.get('nombre')?.hasError('required')"
+                  >
+                    El nombre es obligatoria
+                  </div>
+                  <div
+                    *ngIf="inmueblesForm.get('nombre')?.hasError('minlength')"
+                  >
+                    El nombre debe tener al menos 3 caracteres
+                  </div>
+                  <div
+                    *ngIf="inmueblesForm.get('nombre')?.hasError('maxlength')"
+                  >
+                    <p style="color: red">
+                      El nombre debe tener maximo 22 caracteres
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Cantidad*:</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  formControlName="cantidad"
+                />
+                <div
+                  *ngIf="inmueblesForm.get('cantidad')?.touched"
+                  class="error-message"
+                >
+                  <div
+                    *ngIf="inmueblesForm.get('cantidad')?.hasError('required')"
+                  >
+                    La cantidad es obligatoria
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Descripcion*:</label>
+                <textarea
+                  class="form-control"
+                  formControlName="descripcion"
+                ></textarea>
+                <div
+                  *ngIf="inmueblesForm.get('descripcion')?.touched"
+                  class="error-message"
+                >
+                  <div
+                    *ngIf="
+                      inmueblesForm.get('descripcion')?.hasError('required')
+                    "
+                  >
+                    La descripción es obligatoria
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-12">
+                <div class="mb-3">
+                  <img
+                    class="img"
+                    *ngIf="inmueblesForm.get('imagenBase64')?.value"
+                    [src]="
+                      'data:image/jpg;base64,' +
+                      inmueblesForm.get('imagenBase64')?.value
+                    "
+                    width="50%"
+                    height="50%"
+                    alt="Vista previa de la imagen"
+                  />
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Imagen*:</label>
+                <input
+                  type="file"
+                  class="form-control"
+                  formControlName="imagenBase64"
+                  (change)="onFileChange($event)"
+                />
+                <div *ngIf="isUpdatingImg" class="img-preview my-1">
+                  <img [src]="imgPreview" alt="Image preview" class="img-fluid" width="50%"/>
+              </div>
+              </div>
+
+              <div class="mb-3">
                 <label class="form-label">Area de resguardo*:</label>
                 <ng-select
-                  formControlName="areaId1"
+                  formControlName="areasDeResgualdo"
                   #selectareas
                   [searchable]="false"
                   [items]="areas"
@@ -228,13 +325,13 @@
                   </ng-template>
                 </ng-select>
                 <div
-                  *ngIf="inmueblesForm.get('areaId1')?.touched"
+                  *ngIf="inmueblesForm.get('areasDeResgualdo')?.touched"
                   class="error-message"
                 >
                   <div
                     *ngIf="
                       inmueblesForm
-                        .get('areaId1')
+                        .get('areasDeResgualdo')
                         ?.hasError('required')
                     "
                   >
@@ -242,45 +339,32 @@
                   </div>
                 </div>
               </div>
-              <div class="mb-3" *ngIf="inmueblesForm.get('areasDeResgualdo')?.value == ''">
-                <label class="form-label">Inmuebles*:</label>
-                <ng-select
-                  formControlName="Inmuebles"
-                  #selectareas
-                  [searchable]="false"
-                  [items]="inmuebles"
-                  bindLabel="nombre"
-                  bindValue="id"
-                  placeholder="Elegir"
-                  [clearable]="false"
-                >
-                  <ng-template ng-header-tmp>
+              <div class="col-lg-2">
+                <div class="mb-3 custom-green-switch">
+                  <label for="estadoActivo" class="form-label">Estatus*:</label>
+                  <label class="form-check form-switch checkbox-verde">
                     <input
-                      class="form-control"
-                      type="text"
-                      (input)="selectareas.filter($any($event.target).value)"
+                      class="form-check-input"
+                      type="checkbox"
+                      formControlName="estatus"
                     />
-                  </ng-template>
-                  <ng-template ng-option-tmp let-item="item" let-index="index">
-                    {{ item.nombre }}
-                  </ng-template>
-                </ng-select>
-                <div
-                  *ngIf="inmueblesForm.get('Inmuebles')?.touched"
-                  class="error-message"
-                >
-                  <div
-                    *ngIf="
-                      inmueblesForm
-                        .get('Inmuebles')
-                        ?.hasError('required')
-                    "
-                  >
-                    El area de esguardo es requerido
-                  </div>
+                    <span
+                      class="form-check-label"
+                      [ngClass]="
+                        inmueblesForm.get('estatus')?.value
+                          ? 'text-success'
+                          : 'text-danger'
+                      "
+                    >
+                      {{
+                        inmueblesForm.get("estatus")?.value
+                          ? "Activo"
+                          : "Inactivo"
+                      }}
+                    </span>
+                  </label>
                 </div>
               </div>
-              
             </div>
           </div>
         </div>
