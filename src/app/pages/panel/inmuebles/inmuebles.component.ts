@@ -5,11 +5,11 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { MensajeService } from 'src/app/core/services/mensaje.service';
 import { LoadingStates } from 'src/app/global/global';
 import * as QRCode from 'qrcode-generator';
-import { identifierName } from '@angular/compiler';
 import { InmueblesService } from 'src/app/core/services/inmueble.service';
 import { Inmueble } from 'src/app/models/inmueble';
 import { Area } from 'src/app/models/Area';
 import { AreasService } from 'src/app/core/services/areas.service';
+import { Options } from '@angular-slider/ngx-slider';
 import * as XLSX from 'xlsx';
 //prueba
 @Component({
@@ -39,6 +39,11 @@ export class InmueblesComponent {
   verdadero = 'Activo';
   falso = 'Inactivo';
   estatusTag = this.verdadero;
+  sliderValue: number = 50;
+  sliderOptions: Options = {
+    floor: 0,
+    ceil: 100
+  };
 
   @ViewChild('video', { static: false })
   public video!: ElementRef;
@@ -83,7 +88,7 @@ export class InmueblesComponent {
     this.inmueblesForm.patchValue({
       imagenBase64 : base64Image
     });
-    
+
   }
 
   setEstatus() {

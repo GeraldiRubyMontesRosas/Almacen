@@ -151,7 +151,14 @@
 
               <div class="mb-3">
                 <label class="form-label">Cantidad*:</label>
-                <input type="number" class="form-control" formControlName="cantidad" />
+                <ngx-slider
+                  formControlName="cantidad"
+                  [value]="sliderValue"
+                  [options]="sliderOptions"
+                ></ngx-slider>
+                <div>
+                  Valor del slider: {{ inmueblesForm.get('cantidad')?.value }}
+                </div>
                 <div *ngIf="inmueblesForm.get('cantidad')?.touched" class="error-message">
                   <div *ngIf="inmueblesForm.get('cantidad')?.hasError('required')">
                     La cantidad es obligatoria

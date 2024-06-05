@@ -8,6 +8,7 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { SharedModule  } from 'src/app/shared/shared.module';
+import { NgxSliderModule } from '@angular-slider/ngx-slider';
 
 
 @NgModule({
@@ -23,6 +24,7 @@ import { SharedModule  } from 'src/app/shared/shared.module';
     NgxSpinnerModule,
     NgxPaginationModule,
     NgSelectModule,
+    NgxSliderModule
   ]
 })
 export class InmueblesModule { }
