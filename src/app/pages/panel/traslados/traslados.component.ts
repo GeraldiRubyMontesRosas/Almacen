@@ -41,10 +41,11 @@ export class TrasladosComponent {
   verdadero = 'Activo';
   falso = 'Inactivo';
   estatusTag = this.verdadero;
-  sliderValue: number = 50;
+  sliderValue: number = 0;
+  ceil: number = 100;
   sliderOptions: Options = {
     floor: 0,
-    ceil: 100
+    ceil: this.ceil,
   };  
   filteredInmuebles = [];
 
@@ -74,6 +75,9 @@ export class TrasladosComponent {
   ngOnInit(): void {
     this.inmueblesForm.get('areasDeResgualdo')?.valueChanges.subscribe(areaId => {
       this.filterInmuebles(areaId);
+    });
+    this.inmueblesForm.get('cantidad')?.valueChanges.subscribe(cantidad => {
+      this.ceil = cantidad;
     });
   }
 
@@ -192,7 +196,7 @@ export class TrasladosComponent {
         next: () => {
           this.spinnerService.hide();
           this.mensajeService.mensajeExito(
-            'Candidato actualizado correctamente'
+            'inmuebles actualizado correctamente'
           );
           this.resetForm();
           this.configPaginator.currentPage = 1;
