@@ -7,7 +7,7 @@ import { LoadingStates } from 'src/app/global/global';
 import { AreasService } from 'src/app/core/services/areas.service';
 import { Area } from 'src/app/models/Area';
 import * as XLSX from 'xlsx';
-import { normalizeTickInterval } from 'highcharts';
+import { Responsable } from 'src/app/models/Responsable';
 
 @Component({
   selector: 'app-area',
@@ -22,6 +22,8 @@ export class AreaComponent {
   areaForm!: FormGroup;
   areas: Area[] = [];
   areasFilter: Area[] = [];
+  responsables : Responsable[]= [];
+
   isLoading = LoadingStates.neutro;
   isModalAdd: boolean = true;
   formData: any;
@@ -80,11 +82,6 @@ export class AreaComponent {
         '',
         [
           Validators.required,
-          Validators.maxLength(40),
-          Validators.minLength(2),
-          Validators.pattern(
-            /^([a-zA-ZÀ-ÿ\u00C0-\u00FF]{2})[a-zA-ZÀ-ÿ\u00C0-\u00FF ]+$/
-          ),
         ],
       ],
       estatus: [true],
@@ -226,7 +223,9 @@ export class AreaComponent {
     this.areasFilter = this.areas.filter(
       (area) =>
         area.nombre.toLowerCase().includes(valueSearch) ||
-        area.responsable.toLowerCase().includes(valueSearch)
+        area.responsable?.nombres.toLowerCase().includes(valueSearch) ||
+        area.responsable?.apellidoMaterno.toLowerCase().includes(valueSearch) ||
+        area.responsable?.apellidoPaterno.toLowerCase().includes(valueSearch)
     );
 
     this.configPaginator.currentPage = 1;
