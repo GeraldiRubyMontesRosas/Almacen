@@ -9,6 +9,7 @@ import { Inmueble } from 'src/app/models/inmueble';
 import { InmueblesService } from 'src/app/core/services/inmueble.service';
 import { Area } from 'src/app/models/Area';
 import { AreasService } from 'src/app/core/services/areas.service';
+import { Options } from '@angular-slider/ngx-slider';
 
 import * as XLSX from 'xlsx';
 import * as QRCode from 'qrcode-generator';
@@ -40,7 +41,19 @@ export class TrasladosComponent {
   verdadero = 'Activo';
   falso = 'Inactivo';
   estatusTag = this.verdadero;
+  sliderValue: number = 50;
+  sliderOptions: Options = {
+    floor: 0,
+    ceil: 100
+  };  
+  filteredInmuebles = [];
 
+  public cameraActive: boolean = false;
+  @ViewChild('video', { static: false })
+  public video!: ElementRef;
+  @ViewChild('canvas', { static: false })
+  public canvas!: ElementRef;
+  public captures: Array<any> = [];
   constructor(
     @Inject('CONFIG_PAGINATOR') public configPaginator: PaginationInstance,
     private spinnerService: NgxSpinnerService,
@@ -56,6 +69,16 @@ export class TrasladosComponent {
     this.getInmuebles();
     this.creteForm();
     this.getAreas();
+  }
+
+  ngOnInit(): void {
+    this.inmueblesForm.get('areasDeResgualdo')?.valueChanges.subscribe(areaId => {
+      this.filterInmuebles(areaId);
+    });
+  }
+
+  filterInmuebles(areaId: number): void {
+    this.filteredInmuebles != this.inmuebles.filter(inmueble => inmueble.area?.id === areaId);
   }
 
   setEstatus() {
@@ -102,6 +125,7 @@ export class TrasladosComponent {
       qrBase64: [''],
       areasDeResgualdo: [null, Validators.required],
       estatus: [true],
+      costoUnitario: ['', [Validators.maxLength(10), Validators.required]],
     });
   }
 
