@@ -2,7 +2,7 @@
   <p style="color: white">Guardando...</p>
 </ngx-spinner>
 
-<app-page-header headerTitle="Inmuebles"></app-page-header>
+<app-page-header headerTitle="Traslados"></app-page-header>
 
 <div class="row">
   <div class="col-12">
@@ -163,16 +163,16 @@
                 <label class="form-label">Inmuebles de la zona*:</label>
                 <ng-select 
                   formControlName="inmueblesZona" 
-                  #inmueblesZona 
+                  #selectinmuebles
                   [searchable]="false" 
-                  [items]="filteredInmuebles"
+                  [items]="inmuebles"
                   bindLabel="nombre" 
                   bindValue="id" 
                   placeholder="Elegir" 
                   [clearable]="false">
                   
                   <ng-template ng-header-tmp>
-                    <input class="form-control" type="text" (input)="inmueblesZona.filter($any($event.target).value)" />
+                    <input class="form-control" type="text" (input)="selectinmuebles.filter($any($event.target).value)" />
                   </ng-template>
                   
                   <ng-template ng-option-tmp let-item="item" let-index="index">
