@@ -7,4 +7,5 @@ export interface Responsable{
     edad : number;
     nombreCompleto : string;
     estatus : boolean;
+    strFechaNacimiento: string;   
 }

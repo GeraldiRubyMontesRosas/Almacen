@@ -115,7 +115,7 @@ export class AreaComponent {
     this.areaForm.patchValue({
       id: dto.id,
       nombre: dto.nombre,
-      responsable: dto.responsable,
+      responsable: dto.responsable ? dto.responsable.id : null,
       estatus: dto.estatus,
     });
   }
@@ -152,22 +152,32 @@ export class AreaComponent {
     );
   }
 
-  agregar() {
-    this.area = this.areaForm.value as Area;
+  agregar(): void {
+    const area = this.areaForm.value as Area;
+    const responsableId = this.areaForm.get('responsable')?.value;
+
+    const responsableSeleccionada = this.responsables.find(responsable => responsable.id === responsableId);
+    if (!responsableSeleccionada) {
+      this.mensajeService.mensajeError('El Responsable de resguardo seleccionado no es válido.');
+      return;
+    }
+
+    area.responsable = responsableSeleccionada;
+
     this.spinnerService.show();
-    this.areasService.post(this.area).subscribe({
+    this.areasService.post(area).subscribe({
       next: () => {
         this.spinnerService.hide();
-        this.mensajeService.mensajeExito('Area guardada correctamente');
+        this.mensajeService.mensajeExito('Área guardada correctamente');
         this.resetForm();
-        this.configPaginator.currentPage = 1;
       },
       error: (error) => {
         this.spinnerService.hide();
         this.mensajeService.mensajeError(error);
-      },
+      }
     });
   }
+  
 
   resetForm() {
     this.closebutton.nativeElement.click();
