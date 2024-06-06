@@ -115,21 +115,14 @@ export class TrasladosComponent {
     this.inmueblesForm = this.formBuilder.group({
       id: [null],
       codigo: [''],
-      nombre: [
-        '',
-        [
-          Validators.maxLength(22),
-          Validators.minLength(2),
-          Validators.required,
-        ],
-      ],
+      nombre: [''],
       cantidad: ['', [Validators.maxLength(10), Validators.required]],
-      descripcion: ['', [Validators.required]],
+      descripcion: [''],
       imagenBase64: [''],
       qrBase64: [''],
       areasDeResgualdo: [null, Validators.required],
       estatus: [true],
-      costoUnitario: ['', [Validators.maxLength(10), Validators.required]],
+      costoUnitario:[''],
     });
   }
 
@@ -291,12 +284,12 @@ export class TrasladosComponent {
 
   agregar() {
     this.inmueble = this.inmueblesForm.value as Inmueble;
-    const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
-    const qrBase64 = this.inmueblesForm.get('qrBase64')?.value;
     const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
+    const inmuebleId = this.inmueblesForm.get('inmueblesZona')?.value;
 
     // Buscar el nombre del área seleccionada
     const areaSeleccionada = this.areas.find((area) => area.id === areaId);
+    const inmuebleSeleccionada = this.inmuebles.find((inmueble) => inmueble.id === inmuebleId);
     if (!areaSeleccionada) {
       this.mensajeService.mensajeError(
         'El área de resguardo seleccionada no es válida.'
@@ -305,14 +298,13 @@ export class TrasladosComponent {
     }
 
     // Crear el objeto inmueble con el área completa
-    const inmuebleSinId = { ...this.inmueble, area: areaSeleccionada };
+    const inmueble = { ...this.inmueble, area: areaSeleccionada };
 
-    console.log(inmuebleSinId);
+    
 
-    if (imagenBase64 && qrBase64) {
-      const formData = { ...inmuebleSinId, imagenBase64, qrBase64 }; // Utilizar idGenerado como el valor del código
+    if (inmueble) {
       this.spinnerService.show();
-      this.inmueblesService.post(formData).subscribe({
+      this.inmueblesService.post(inmueble).subscribe({
         next: () => {
           this.spinnerService.hide();
           this.mensajeService.mensajeExito('Inmueble guardado correctamente');
@@ -326,9 +318,11 @@ export class TrasladosComponent {
       });
     } else {
       this.spinnerService.hide();
+      console.log(this.inmueble)
       this.mensajeService.mensajeError(
         'Error: No se encontró una representación válida de la imagen o QR.'
       );
+      
     }
   }
 
