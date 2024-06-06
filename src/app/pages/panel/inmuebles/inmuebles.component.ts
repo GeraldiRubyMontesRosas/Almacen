@@ -169,6 +169,7 @@ export class InmueblesComponent {
       qrBase64: [''],
       areasDeResgualdo: [null, Validators.required],
       estatus: [true],
+      costoUnitario: ['', [Validators.maxLength(10), Validators.required]]
     });
   }
 
