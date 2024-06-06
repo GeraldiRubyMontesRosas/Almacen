@@ -8,6 +8,7 @@ import { AreasService } from 'src/app/core/services/areas.service';
 import { Area } from 'src/app/models/Area';
 import * as XLSX from 'xlsx';
 import { Responsable } from 'src/app/models/Responsable';
+import { ResponsableService } from 'src/app/core/services/responsable.service';
 
 @Component({
   selector: 'app-area',
@@ -22,14 +23,17 @@ export class AreaComponent {
   areaForm!: FormGroup;
   areas: Area[] = [];
   areasFilter: Area[] = [];
-  responsables : Responsable[]= [];
+
+  responsable!: Responsable;
+  responsableForm!: FormGroup;
+  responsables : Responsable[] = [];
+  responsablesFilter : Responsable[] = [];
 
   isLoading = LoadingStates.neutro;
   isModalAdd: boolean = true;
   formData: any;
   id!: number;
   idUpdate!: number;
-  responsable!: string;
   estatusBtn = true;
   verdadero = 'Activo';
   falso = 'Inactivo';
@@ -40,10 +44,13 @@ export class AreaComponent {
     private spinnerService: NgxSpinnerService,
     private mensajeService: MensajeService,
     private formBuilder: FormBuilder,
-    private areasService: AreasService
+    private areasService: AreasService,
+    private responsableService : ResponsableService
   ) {
     this.areasService.refreshListAreas.subscribe(() => this.getAreas());
+    this.responsableService.refreshListResponsable.subscribe(() => this.getResponsables());
     this.getAreas();
+    this.getResponsables();
     this.creteForm();
   }
   setEstatus() {
@@ -55,6 +62,20 @@ export class AreaComponent {
     this.areasService.getAll().subscribe({
       next: (dataFromAPI) => {
         this.areas = dataFromAPI;
+        this.areasFilter = this.areas;
+        this.isLoading = LoadingStates.falseLoading;
+      },
+      error: () => {
+        this.isLoading = LoadingStates.errorLoading;
+      },
+    });
+  }
+
+  getResponsables() {
+    this.isLoading = LoadingStates.trueLoading;
+    this.responsableService.getAll().subscribe({
+      next: (dataFromAPI) => {
+        this.responsables = dataFromAPI;
         this.areasFilter = this.areas;
         this.isLoading = LoadingStates.falseLoading;
       },

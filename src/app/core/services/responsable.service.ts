@@ -18,7 +18,7 @@ export class ResponsableService {
     private handleErrorService: HandleErrorService
   ) { }
 
-  get refreshListTallas() {
+  get refreshListResponsable() { 
     return this._refreshListResponsable$;
   }
 
