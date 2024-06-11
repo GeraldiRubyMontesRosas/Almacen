@@ -12,5 +12,5 @@ export interface Inmueble {
   qr: string;
   qrBase64: string;
   estatus: boolean;
-  constoUnitario: number;
+  costo: number;
 }

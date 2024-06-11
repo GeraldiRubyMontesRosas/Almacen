@@ -162,15 +162,14 @@
               <div class="mb-3">
                 <label class="form-label">Inmuebles de la zona*:</label>
                 <ng-select 
-                  formControlName="inmueblesZona" 
-                  #selectinmuebles
-                  [searchable]="false" 
-                  [items]="inmuebles"
-                  bindLabel="nombre" 
-                  bindValue="id" 
-                  placeholder="Elegir" 
-                  [clearable]="false">
-                  
+                formControlName="inmueble" 
+                #selectinmuebles
+                [searchable]="false" 
+                [items]="inmuebles"
+                bindLabel="nombre" 
+                bindValue="id" 
+                placeholder="Elegir" 
+                [clearable]="false">
                   <ng-template ng-header-tmp>
                     <input class="form-control" type="text" (input)="selectinmuebles.filter($any($event.target).value)" />
                   </ng-template>
@@ -180,8 +179,8 @@
                   </ng-template>
                 </ng-select>
                 
-                <div *ngIf="inmueblesForm.get('inmueblesZona')?.touched" class="error-message">
-                  <div *ngIf="inmueblesForm.get('inmueblesZona')?.hasError('required')">
+                <div *ngIf="inmueblesForm.get('inmueble')?.touched" class="error-message">
+                  <div *ngIf="inmueblesForm.get('inmueble')?.hasError('required')">
                     El inmueble debe ser seleccionado
                   </div>
                 </div>

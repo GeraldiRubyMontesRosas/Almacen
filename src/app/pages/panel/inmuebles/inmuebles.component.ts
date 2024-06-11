@@ -167,9 +167,9 @@ export class InmueblesComponent {
       descripcion: ['', [Validators.required]],
       imagenBase64: [''],
       qrBase64: [''],
-      areasDeResgualdo: [null, Validators.required],
+      area: [null, Validators.required],
       estatus: [true],
-      costoUnitario: ['', [Validators.maxLength(10), Validators.required]]
+      costo: ['', [Validators.maxLength(10), Validators.required]]
     });
   }
 
@@ -198,7 +198,8 @@ export class InmueblesComponent {
       imagenBase64: '',
       QrBase64: '',
       estatus: dto.estatus,
-      areasDeResgualdo: dto.area ? dto.area.id : null,
+      area: dto.area ? dto.area.id : null,
+      costo:dto.costo
     });
     console.log(dto);
   }
@@ -206,10 +207,10 @@ export class InmueblesComponent {
   editarInmueble() {
     this.inmueble = this.inmueblesForm.value as Inmueble;
     const inmueble = this.inmueblesForm.get('id')?.value;
-    const area = this.inmueblesForm.get('areasDeResgualdo')?.value;
+    const area = this.inmueblesForm.get('area')?.value;
     const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
     const QrBase64 = this.inmueblesForm.get('QrBase64')?.value;
-    const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
+    const areaId = this.inmueblesForm.get('area')?.value;
     console.log(imagenBase64);
     console.log(QrBase64);
     const areaSeleccionada = this.areas.find((area) => area.id === areaId);
@@ -359,7 +360,7 @@ export class InmueblesComponent {
     const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
     const qrBase64 = this.inmueblesForm.get('qrBase64')?.value;
     const codigo = this.inmueblesForm.get('idGenerado')?.value; // Usar idGenerado en lugar de codigo
-    const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
+    const areaId = this.inmueblesForm.get('area')?.value;
 
     // Buscar el nombre del área seleccionada
     const areaSeleccionada = this.areas.find((area) => area.id === areaId);
@@ -466,7 +467,7 @@ export class InmueblesComponent {
         Cantidad: inmueble.cantidad,
         Descripcion: inmueble.descripcion,
         Estatus: estatus,
-        AreasDeResgualdo: inmueble.area ? inmueble.area.nombre : null,
+        area: inmueble.area ? inmueble.area.nombre : null,
       };
     });
 

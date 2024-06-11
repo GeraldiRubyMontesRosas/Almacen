@@ -168,9 +168,9 @@
 
               <div class="mb-3">
                 <label class="form-label">Costo unitario*:</label>
-                <input type="number" class="form-control" formControlName="costoUnitario">
-                <div *ngIf="inmueblesForm.get('costoUnitario')?.touched" class="error-message">
-                  <div *ngIf="inmueblesForm.get('costoUnitario')?.hasError('required')">
+                <input type="number" class="form-control" formControlName="costo">
+                <div *ngIf="inmueblesForm.get('costo')?.touched" class="error-message">
+                  <div *ngIf="inmueblesForm.get('costo')?.hasError('required')">
                     El costo es obligatorio
                   </div>
                 </div>
@@ -212,7 +212,7 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">Area de resguardo*:</label>
-                <ng-select formControlName="areasDeResgualdo" #selectareas [searchable]="false" [items]="areas"
+                <ng-select formControlName="area" #selectareas [searchable]="false" [items]="areas"
                   bindLabel="nombre" bindValue="id" placeholder="Elegir" [clearable]="false">
                   <ng-template ng-header-tmp>
                     <input class="form-control" type="text" (input)="selectareas.filter($any($event.target).value)" />
@@ -221,10 +221,10 @@
                     {{ item.nombre }}
                   </ng-template>
                 </ng-select>
-                <div *ngIf="inmueblesForm.get('areasDeResgualdo')?.touched" class="error-message">
+                <div *ngIf="inmueblesForm.get('area')?.touched" class="error-message">
                   <div *ngIf="
                       inmueblesForm
-                        .get('areasDeResgualdo')
+                        .get('area')
                         ?.hasError('required')
                     ">
                     El area de resguardo es requerido

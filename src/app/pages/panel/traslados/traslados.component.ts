@@ -123,6 +123,7 @@ export class TrasladosComponent {
       areasDeResgualdo: [null, Validators.required],
       estatus: [true],
       costoUnitario:[''],
+      inmueble:[''],
     });
   }
 
@@ -283,49 +284,49 @@ export class TrasladosComponent {
   }
 
   agregar() {
-    this.inmueble = this.inmueblesForm.value as Inmueble;
+    const inmuebleid = this.inmueblesForm.get('inmueble')?.value;
     const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
-    const inmuebleId = this.inmueblesForm.get('inmueblesZona')?.value;
-
+    const cantidad = this.inmueblesForm.get('cantidad')?.value;
+  
     // Buscar el nombre del área seleccionada
     const areaSeleccionada = this.areas.find((area) => area.id === areaId);
-    const inmuebleSeleccionada = this.inmuebles.find((inmueble) => inmueble.id === inmuebleId);
     if (!areaSeleccionada) {
       this.mensajeService.mensajeError(
         'El área de resguardo seleccionada no es válida.'
       );
       return;
     }
-
-    // Crear el objeto inmueble con el área completa
-    const inmueble = { ...this.inmueble, area: areaSeleccionada };
-
-    
-
-    if (inmueble) {
-      this.spinnerService.show();
-      this.inmueblesService.post(inmueble).subscribe({
-        next: () => {
-          this.spinnerService.hide();
-          this.mensajeService.mensajeExito('Inmueble guardado correctamente');
-          this.resetForm();
-          this.configPaginator.currentPage = 1;
-        },
-        error: (error) => {
-          this.spinnerService.hide();
-          this.mensajeService.mensajeError(error);
-        },
-      });
-    } else {
-      this.spinnerService.hide();
-      console.log(this.inmueble)
+  
+    // Buscar el inmueble seleccionado
+    const inmuebleSeleccionada = this.inmuebles.find((inmueble) => inmueble.id === inmuebleid);
+    if (!inmuebleSeleccionada) {
       this.mensajeService.mensajeError(
-        'Error: No se encontró una representación válida de la imagen o QR.'
+        'El inmueble de resguardo seleccionado no es válido.'
       );
-      
+      return;
     }
+  
+    // Reemplazar el área en el objeto inmueble con el área seleccionada y establecer id como null
+    const inmuebleConIdNulo = { ...inmuebleSeleccionada,id: 0, area: areaSeleccionada, cantidad: cantidad };
+  
+    console.log(inmuebleConIdNulo);
+  
+    this.spinnerService.show();
+    this.inmueblesService.post(inmuebleConIdNulo).subscribe({
+      next: () => {
+        this.spinnerService.hide();
+        this.mensajeService.mensajeExito('Inmueble guardado correctamente');
+        this.resetForm();
+        this.configPaginator.currentPage = 1;
+      },
+      error: (error) => {
+        this.spinnerService.hide();
+        this.mensajeService.mensajeError(error);
+      },
+    });
   }
-
+  
+  
   handleChangeAdd() {
     this.isUpdatingImg = false;
     this.isUpdatingEmblema = false;
