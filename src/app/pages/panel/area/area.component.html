@@ -67,7 +67,7 @@
                   }}
                 </td>
                 <td>{{ area.nombre }}</td>
-                <td>{{ area.responsable }}</td>
+                <td>{{ area.responsable?.nombreCompleto }}</td>
                 <td class="text-center">
                   <ng-container *ngIf="area.estatus; else elseEstatus">
                     <span class="badge bg-success me-1"> </span> Activo
