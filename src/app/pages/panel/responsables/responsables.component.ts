@@ -94,7 +94,7 @@ export class ResponsablesComponent {
     this.responsableService.put(this.idUpdate, this.responsable).subscribe({
       next: () => {
         this.spinnerService.hide();
-        this.mensajeService.mensajeExito('Talla actualizada correctamente');
+        this.mensajeService.mensajeExito('Responsable actualizada correctamente');
         this.resetForm();
       },
       error: (error) => {
@@ -131,11 +131,10 @@ export class ResponsablesComponent {
 
   deleteItem(id: number, nameItem: string) {
     this.mensajeService.mensajeAdvertencia(
-      `¿Estás seguro de eliminar la talla: ${nameItem}?`,
+      `¿Estás seguro de eliminar la responsable: ${nameItem}?`,
       () => {
-        this.responsableService.delete(id).subscribe({
-          next: () => {
-            this.mensajeService.mensajeExito('Talla borrada correctamente');
+        this.responsableService.delete(id).subscribe({next: () => {
+            this.mensajeService.mensajeExito('Responsable borrada correctamente');
             this.configPaginator.currentPage = 1;
             this.searchItem.nativeElement.value = '';
           },
@@ -144,7 +143,7 @@ export class ResponsablesComponent {
       }
     );
   }
-
+  
   handleChangeAdd() {
     if (this.responsablesForm) {
       this.responsablesForm.reset();
@@ -181,7 +180,7 @@ export class ResponsablesComponent {
 
   exportarDatosAExcel() {
     if (this.responsables.length === 0) {
-      console.warn('La lista de tallas está vacía. No se puede exportar.');
+      console.warn('La lista de a. No se puede exportar.');
       return;
     }
 
@@ -208,6 +207,6 @@ export class ResponsablesComponent {
       type: 'array',
     });
 
-    this.guardarArchivoExcel(excelBuffer, 'Tallas.xlsx');
+    this.guardarArchivoExcel(excelBuffer, 'Responsables.xlsx');
   }
 }
