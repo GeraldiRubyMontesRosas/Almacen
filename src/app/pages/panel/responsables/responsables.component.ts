@@ -1,15 +1,10 @@
 import { Component, ElementRef, Inject, ViewChild } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  FormGroupDirective,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PaginationInstance } from 'ngx-pagination';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MensajeService } from 'src/app/core/services/mensaje.service';
 import { LoadingStates } from 'src/app/global/global';
-import { AbstractControl } from '@angular/forms';
+
 
 import { ResponsableService } from 'src/app/core/services/responsable.service';
 import { Responsable } from 'src/app/models/Responsable';
@@ -253,7 +248,7 @@ export class ResponsablesComponent {
 
     return age;
   }
-  
+
   getControlValue = (controlName: string) => {
     const control = this.responsablesForm.get(controlName);
     return control ? control.value : null;
