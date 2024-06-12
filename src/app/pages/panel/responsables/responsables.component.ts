@@ -110,7 +110,7 @@ export class ResponsablesComponent {
     this.responsableService.post(this.responsable).subscribe({
       next: () => {
         this.spinnerService.hide();
-        this.mensajeService.mensajeExito('Talla guardada correctamente');
+        this.mensajeService.mensajeExito('Responsable guardada correctamente');
         this.resetForm();
         this.configPaginator.currentPage = 1;
       },
