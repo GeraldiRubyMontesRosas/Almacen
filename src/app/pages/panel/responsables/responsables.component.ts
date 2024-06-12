@@ -1,9 +1,15 @@
 import { Component, ElementRef, Inject, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, FormGroupDirective, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  FormGroupDirective,
+  Validators,
+} from '@angular/forms';
 import { PaginationInstance } from 'ngx-pagination';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MensajeService } from 'src/app/core/services/mensaje.service';
 import { LoadingStates } from 'src/app/global/global';
+import { AbstractControl } from '@angular/forms';
 
 import { ResponsableService } from 'src/app/core/services/responsable.service';
 import { Responsable } from 'src/app/models/Responsable';
@@ -13,7 +19,7 @@ import * as XLSX from 'xlsx';
 @Component({
   selector: 'app-responsables',
   templateUrl: './responsables.component.html',
-  styleUrls: ['./responsables.component.css']
+  styleUrls: ['./responsables.component.css'],
 })
 export class ResponsablesComponent {
   @ViewChild('searchItem') searchItem!: ElementRef;
@@ -23,7 +29,7 @@ export class ResponsablesComponent {
   responsables: Responsable[] = [];
   responsablesForm!: FormGroup;
   responsablesFilter: Responsable[] = [];
-  
+
   isLoading = LoadingStates.neutro;
   idUpdate!: number;
   isModalAdd = true;
@@ -34,8 +40,10 @@ export class ResponsablesComponent {
     private mensajeService: MensajeService,
     private formBuilder: FormBuilder,
     private responsableService: ResponsableService
-  ){
-    this.responsableService.refreshListResponsable.subscribe(() => this.getResponsables());
+  ) {
+    this.responsableService.refreshListResponsable.subscribe(() =>
+      this.getResponsables()
+    );
     this.getResponsables();
     this.creteForm();
   }
@@ -45,15 +53,27 @@ export class ResponsablesComponent {
       id: [null],
       nombres: [
         '',
-        [Validators.maxLength(22), Validators.minLength(2), Validators.required]
+        [
+          Validators.maxLength(22),
+          Validators.minLength(2),
+          Validators.required,
+        ],
       ],
       apellidoPaterno: [
         '',
-        [Validators.maxLength(22), Validators.minLength(2), Validators.required]
+        [
+          Validators.maxLength(22),
+          Validators.minLength(2),
+          Validators.required,
+        ],
       ],
       apellidoMaterno: [
         '',
-        [Validators.maxLength(22), Validators.minLength(2), Validators.required]
+        [
+          Validators.maxLength(22),
+          Validators.minLength(2),
+          Validators.required,
+        ],
       ],
       fechaDeNacimiento: [[Validators.required]],
       estatus: [true],
@@ -72,7 +92,7 @@ export class ResponsablesComponent {
         this.isLoading = LoadingStates.errorLoading;
       },
     });
-  } 
+  }
 
   setDataModalUpdate(dto: Responsable) {
     this.isModalAdd = false;
@@ -90,11 +110,14 @@ export class ResponsablesComponent {
 
   editarUsuario() {
     this.responsable = this.responsablesForm.value as Responsable;
-    this.spinnerService.show();
+    this.handleFechaDeNacimiento();
+    this.handleNombreCompleto();
     this.responsableService.put(this.idUpdate, this.responsable).subscribe({
       next: () => {
         this.spinnerService.hide();
-        this.mensajeService.mensajeExito('Responsable actualizada correctamente');
+        this.mensajeService.mensajeExito(
+          'Responsable actualizada correctamente'
+        );
         this.resetForm();
       },
       error: (error) => {
@@ -106,6 +129,8 @@ export class ResponsablesComponent {
 
   agregar() {
     this.responsable = this.responsablesForm.value as Responsable;
+    this.handleFechaDeNacimiento();
+    this.handleNombreCompleto();
     this.spinnerService.show();
     this.responsableService.post(this.responsable).subscribe({
       next: () => {
@@ -133,8 +158,11 @@ export class ResponsablesComponent {
     this.mensajeService.mensajeAdvertencia(
       `¿Estás seguro de eliminar la responsable: ${nameItem}?`,
       () => {
-        this.responsableService.delete(id).subscribe({next: () => {
-            this.mensajeService.mensajeExito('Responsable borrada correctamente');
+        this.responsableService.delete(id).subscribe({
+          next: () => {
+            this.mensajeService.mensajeExito(
+              'Responsable borrada correctamente'
+            );
             this.configPaginator.currentPage = 1;
             this.searchItem.nativeElement.value = '';
           },
@@ -143,7 +171,7 @@ export class ResponsablesComponent {
       }
     );
   }
-  
+
   handleChangeAdd() {
     if (this.responsablesForm) {
       this.responsablesForm.reset();
@@ -192,7 +220,6 @@ export class ResponsablesComponent {
         ApellidoPaterno: responsables.apellidoPaterno,
         FechaDeNacimiento: responsables.strFechaNacimiento,
         Edad: responsables.edad,
-
       };
     });
 
@@ -209,4 +236,51 @@ export class ResponsablesComponent {
 
     this.guardarArchivoExcel(excelBuffer, 'Responsables.xlsx');
   }
+
+  calculateAge(birthDate: Date): number {
+    const today = new Date();
+    const birthYear = birthDate.getFullYear();
+    const birthMonth = birthDate.getMonth();
+    const birthDay = birthDate.getDate();
+
+    let age = today.getFullYear() - birthYear;
+    const monthDifference = today.getMonth() - birthMonth;
+    const dayDifference = today.getDate() - birthDay;
+
+    if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
+      age--;
+    }
+
+    return age;
+  }
+  
+  getControlValue = (controlName: string) => {
+    const control = this.responsablesForm.get(controlName);
+    return control ? control.value : null;
+  };
+  
+  handleFechaDeNacimiento = () => {
+    const fechaDeNacimientoValue = this.getControlValue('fechaDeNacimiento');
+    if (fechaDeNacimientoValue) {
+      const fechaDeNacimiento: Date = new Date(fechaDeNacimientoValue);
+      this.responsable.edad = this.calculateAge(fechaDeNacimiento);
+      this.responsable.strFechaNacimiento = fechaDeNacimiento.toISOString();
+    } else {
+      console.error('No se pudo obtener la fecha de nacimiento del formulario.');
+    }
+  };
+  
+  handleNombreCompleto = () => {
+    const nombresValue = this.getControlValue('nombres');
+    const apellidoPaternoValue = this.getControlValue('apellidoPaterno');
+    const apellidoMaternoValue = this.getControlValue('apellidoMaterno');
+  
+    if (nombresValue && apellidoPaternoValue && apellidoMaternoValue) {
+      this.responsable.nombreCompleto = `${nombresValue} ${apellidoPaternoValue} ${apellidoMaternoValue}`;
+    } else {
+      console.error('No se pudo obtener alguno de los valores necesarios para el nombre completo.');
+      this.mensajeService.mensajeError('No se pudo obtener alguno de los valores necesarios para el nombre completo.');
+    }
+  };
+  
 }
