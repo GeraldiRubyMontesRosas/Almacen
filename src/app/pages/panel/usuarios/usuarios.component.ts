@@ -2,14 +2,12 @@ import { Component, Inject, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PaginationInstance } from 'ngx-pagination';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { CandidatosService } from 'src/app/core/services/candidatos.service';
 import { MensajeService } from 'src/app/core/services/mensaje.service';
-import { OperadoresService } from 'src/app/core/services/operadores.service';
+import { ResponsableService } from 'src/app/core/services/responsable.service';
 import { RolsService } from 'src/app/core/services/rols.service';
 import { UsuariosService } from 'src/app/core/services/usuarios.service';
 import { LoadingStates } from 'src/app/global/global';
-import { Candidato } from 'src/app/models/candidato';
-import { Operador } from 'src/app/models/operador';
+import { Responsable } from 'src/app/models/Responsable';
 import { Rol } from 'src/app/models/rol';
 import { Usuario } from 'src/app/models/usuario';
 import * as XLSX from 'xlsx';
@@ -28,10 +26,10 @@ export class UsuariosComponent {
   usuarios: Usuario[] = [];
   usuariosFilter: Usuario[] = [];
   isLoading = LoadingStates.neutro;
-  rols: Rol[] = [];
-  candidatos: Candidato[] = [];
-  operadores: Operador[] = [];
+  rol: Rol[] = [];
+  responsables: Responsable[] = [];
   isModalAdd = true;
+  nombreLabel = '';
 
   constructor(
     @Inject('CONFIG_PAGINATOR') public configPaginator: PaginationInstance,
@@ -39,36 +37,53 @@ export class UsuariosComponent {
     private usuarioService: UsuariosService,
     private mensajeService: MensajeService,
     private formBuilder: FormBuilder,
-    private candidatosService: CandidatosService,
-    private rolsService: RolsService,
-    private operadoresService: OperadoresService
+    private responsableService: ResponsableService,
+    private rolsService: RolsService
   ) {
     this.usuarioService.refreshListUsuarios.subscribe(() => this.getUsuarios());
     this.getUsuarios();
     this.getRols();
-    this.getCandidatos();
+    this.getResponsables();
     this.creteForm();
-    this.getOperadores();
+
     this.subscribeRolId();
     this.isModalAdd = false;
+  }
+
+  ngOnInit(): void {
+    this.usuarioForm.get('rol')?.valueChanges.subscribe(value => {
+      if (value === 1) {
+        this.usuarioForm.get('responsable')?.disable();
+        this.usuarioForm.get('responsable')?.setValue('');
+        this.nombreLabel = '';
+      } else if (value === 2) {
+        this.usuarioForm.get('responsable')?.enable();
+        this.nombreLabel = 'Nombre';
+      }
+    });
+
+    this.usuarioForm.get('responsable')?.valueChanges.subscribe(value => {
+      if (value) {
+        const responsableSeleccionado = this.responsables.find(r => r.id === value);
+        if (responsableSeleccionado) {
+          this.usuarioForm.get('nombre')?.setValue(responsableSeleccionado.nombreCompleto);
+        }
+      } else {
+        this.usuarioForm.get('nombre')?.setValue('');
+      }
+    });
   }
 
   getRols() {
     this.rolsService
       .getAll()
-      .subscribe({ next: (dataFromAPI) => (this.rols = dataFromAPI) });
+      .subscribe({ next: (dataFromAPI) => (this.rol = dataFromAPI) });
   }
 
-  getCandidatos() {
-    this.candidatosService
+  getResponsables() {
+    this.responsableService
       .getAll()
-      .subscribe({ next: (dataFromAPI) => (this.candidatos = dataFromAPI) });
-  }
-
-  getOperadores() {
-    this.operadoresService
-      .getAll()
-      .subscribe({ next: (dataFromAPI) => (this.operadores = dataFromAPI) });
+      .subscribe({ next: (dataFromAPI) => (this.responsables = dataFromAPI) });
   }
 
   creteForm() {
@@ -85,28 +100,6 @@ export class UsuariosComponent {
           ),
         ],
       ],
-      apellidoPaterno: [
-        '',
-        [
-          Validators.required,
-          Validators.maxLength(17),
-          Validators.minLength(2),
-          Validators.pattern(
-            /^([a-zA-ZÀ-ÿ\u00C0-\u00FF]{2})[a-zA-ZÀ-ÿ\u00C0-\u00FF ]+$/
-          ),
-        ],
-      ],
-      apellidoMaterno: [
-        '',
-        [
-          Validators.required,
-          Validators.maxLength(17),
-          Validators.minLength(2),
-          Validators.pattern(
-            /^([a-zA-ZÀ-ÿ\u00C0-\u00FF]{2})[a-zA-ZÀ-ÿ\u00C0-\u00FF ]+$/
-          ),
-        ],
-      ],
       correo: [
         '',
         [
@@ -117,9 +110,8 @@ export class UsuariosComponent {
       ],
       password: ['', [Validators.required, Validators.minLength(8)]],
       estatus: [true],
-      rolId: [null, Validators.required],
-      operadorId: [null],
-      candidatoId: [null],
+      rol: [null, Validators.required],
+      responsable: [null],
     });
   }
 
@@ -184,8 +176,6 @@ export class UsuariosComponent {
     this.usuariosFilter = this.usuarios.filter(
       (usuario) =>
         usuario.nombre.toLowerCase().includes(valueSearch) ||
-        usuario.apellidoPaterno.toLowerCase().includes(valueSearch) ||
-        usuario.apellidoMaterno.toLowerCase().includes(valueSearch) ||
         usuario.rol.nombreRol.toLowerCase().includes(valueSearch) ||
         usuario.correo.toLowerCase().includes(valueSearch)
     );
@@ -201,30 +191,41 @@ export class UsuariosComponent {
     this.usuarioForm.patchValue({
       id: dto.id,
       nombre: dto.nombre,
-      apellidoPaterno: dto.apellidoPaterno,
-      apellidoMaterno: dto.apellidoMaterno,
       correo: dto.correo,
       password: dto.password,
       estatus: dto.estatus,
-      rolId: dto.rol.id,
-      candidatoId: dto.candidato?.id,
-      operadorId: dto.operador?.id,
+      rol: dto.rol.id,
+      responsable: dto.responsable?.id,
     });
   }
 
   editarUsuario() {
     this.usuario = this.usuarioForm.value as Usuario;
 
-    const rolId = this.usuarioForm.get('rolId')?.value;
-    const candidatoId = this.usuarioForm.get('candidatoId')?.value;
-    const operadorId = this.usuarioForm.get('operadorId')?.value;
+    const rolId = this.usuarioForm.get('rol')?.value;
+    const responsableId = this.usuarioForm.get('responsable')?.value;
 
-    this.usuario.operador = { id: operadorId } as Operador;
-    this.usuario.candidato = { id: candidatoId } as Candidato;
-    this.usuario.rol = { id: rolId } as Rol;
+    // Find the corresponding rol and responsable objects
+    const rolSeleccionado = this.rol.find((rol) => rol.id === rolId);
+    const responsableSeleccionado = this.responsables.find(
+      (responsable) => responsable.id === responsableId
+    );
 
+    if (!rolSeleccionado) {
+      this.mensajeService.mensajeError(
+        'El rol o responsable seleccionado no es válido.'
+      );
+      return;
+    }
+
+    // Crear el objeto inmueble con el área completa
+    const inmuebleSinId = {
+      ...this.usuario,
+      rol: rolSeleccionado,
+      responsable: responsableSeleccionado,
+    };
     this.spinnerService.show();
-    this.usuarioService.put(this.idUpdate, this.usuario).subscribe({
+    this.usuarioService.put(this.idUpdate, inmuebleSinId).subscribe({
       next: () => {
         this.spinnerService.hide();
         this.mensajeService.mensajeExito('Usuario actualizado correctamente');
@@ -255,15 +256,31 @@ export class UsuariosComponent {
 
   agregar() {
     this.usuario = this.usuarioForm.value as Usuario;
-    const rolId = this.usuarioForm.get('rolId')?.value;
-    const candidatoId = this.usuarioForm.get('candidatoId')?.value;
-    const operadorId = this.usuarioForm.get('operadorId')?.value;
+    const rolId = this.usuarioForm.get('rol')?.value;
+    const responsableId = this.usuarioForm.get('responsable')?.value;
 
-    this.usuario.operador = { id: operadorId } as Operador;
-    this.usuario.candidato = { id: candidatoId } as Candidato;
-    this.usuario.rol = { id: rolId } as Rol;
+    // Find the corresponding rol and responsable objects
+    const rolSeleccionado = this.rol.find((rol) => rol.id === rolId);
+    const responsableSeleccionado = this.responsables.find(
+      (responsable) => responsable.id === responsableId
+    );
+
+    if (!rolSeleccionado) {
+      this.mensajeService.mensajeError(
+        'El rol o responsable seleccionado no es válido.'
+      );
+      return;
+    }
+
+    // Crear el objeto inmueble con el área completa
+    const inmuebleSinId = {
+      ...this.usuario,
+      rol: rolSeleccionado,
+      responsable: responsableSeleccionado,
+    };
+
     this.spinnerService.show();
-    this.usuarioService.post(this.usuario).subscribe({
+    this.usuarioService.post(inmuebleSinId).subscribe({
       next: () => {
         this.spinnerService.hide();
         this.mensajeService.mensajeExito('Usuario guardado correctamente');
@@ -310,9 +327,7 @@ export class UsuariosComponent {
     const datosParaExportar = this.usuarios.map((usuario) => {
       const estatus = usuario.estatus ? 'Activo' : 'Inactivo';
       return {
-        Nombre: usuario.nombre,
-        'Apellido Paterno': usuario.apellidoPaterno,
-        'Apellido Materno': usuario.apellidoMaterno,
+        'Nombre Completo': usuario.nombre,
         Correo: usuario.correo,
         Rol: usuario.rol.nombreRol,
         Estatus: estatus,
