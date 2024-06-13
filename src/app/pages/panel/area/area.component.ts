@@ -27,6 +27,7 @@ export class AreaComponent {
   formData: any;
   id!: number;
   idUpdate!: number;
+  responsable!: string;
 
   constructor(
     @Inject('CONFIG_PAGINATOR') public configPaginator: PaginationInstance,
@@ -95,7 +96,7 @@ export class AreaComponent {
   editarUsuario() {
     this.area = this.areaForm.value as Area;
     this.spinnerService.show();
-    this.areasService.put(this.idUpdate, this.area).subscribe({
+    this.areasService.put(this.idUpdate, this.area,).subscribe({
       next: () => {
         this.spinnerService.hide();
         this.mensajeService.mensajeExito('Area actualizada correctamente');
