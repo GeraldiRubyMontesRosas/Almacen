@@ -51,22 +51,24 @@ export class UsuariosComponent {
   }
 
   ngOnInit(): void {
-    this.usuarioForm.get('rol')?.valueChanges.subscribe(value => {
+    this.usuarioForm.get('rol')?.valueChanges.subscribe((value) => {
       if (value === 1) {
         this.usuarioForm.get('responsable')?.disable();
         this.usuarioForm.get('responsable')?.setValue('');
-        this.nombreLabel = '';
       } else if (value === 2) {
         this.usuarioForm.get('responsable')?.enable();
-        this.nombreLabel = 'Nombre';
       }
     });
 
-    this.usuarioForm.get('responsable')?.valueChanges.subscribe(value => {
+    this.usuarioForm.get('responsable')?.valueChanges.subscribe((value) => {
       if (value) {
-        const responsableSeleccionado = this.responsables.find(r => r.id === value);
+        const responsableSeleccionado = this.responsables.find(
+          (r) => r.id === value
+        );
         if (responsableSeleccionado) {
-          this.usuarioForm.get('nombre')?.setValue(responsableSeleccionado.nombreCompleto);
+          this.usuarioForm
+            .get('nombre')
+            ?.setValue(responsableSeleccionado.nombreCompleto);
         }
       } else {
         this.usuarioForm.get('nombre')?.setValue('');
@@ -188,6 +190,8 @@ export class UsuariosComponent {
   setDataModalUpdate(dto: Usuario) {
     this.isModalAdd = false;
     this.idUpdate = dto.id;
+    this.nombreLabel = dto.nombre;
+    console.log(this.nombreLabel);
     this.usuarioForm.patchValue({
       id: dto.id,
       nombre: dto.nombre,
