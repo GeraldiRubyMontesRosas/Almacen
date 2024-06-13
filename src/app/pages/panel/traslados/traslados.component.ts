@@ -69,9 +69,9 @@ export class TrasladosComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.inmueblesForm.get('areasDeResgualdo')?.valueChanges.subscribe(areaId => {
-      this.filterInmuebles(areaId);
-    });
+    //this.inmueblesForm.get('areasDeResgualdo')?.valueChanges.subscribe(areaId => {
+      //this.filterInmuebles(areaId);
+    //});
     this.inmueblesForm.get('cantidad')?.valueChanges.subscribe(cantidad => {
       this.ceil = cantidad;
     });
@@ -93,9 +93,9 @@ export class TrasladosComponent implements OnInit {
     });
   }
 
-  filterInmuebles(areaId: number): void {
-    this.filteredInmuebles = this.inmuebles.filter(inmueble => inmueble.area?.id === areaId);
-  }
+ // filterInmuebles(areaId: number): void {
+ //   this.filteredInmuebles = this.inmuebles.filter(inmueble => inmueble.area?.id === areaId);
+  //}
 
   setEstatus() {
     this.estatusTag = this.estatusBtn ? this.verdadero : this.falso;
@@ -314,6 +314,13 @@ export class TrasladosComponent implements OnInit {
       };
 
       reader.readAsArrayBuffer(file);
+    }
+  }
+  submit() {
+    if (this.isModalAdd === false) {
+      this.editarInmueble();
+    } else {
+    
     }
   }
 }
