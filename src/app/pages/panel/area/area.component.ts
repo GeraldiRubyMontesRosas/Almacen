@@ -7,7 +7,8 @@ import { LoadingStates } from 'src/app/global/global';
 import { AreasService } from 'src/app/core/services/areas.service';
 import { Area } from 'src/app/models/Area';
 import * as XLSX from 'xlsx';
-import { normalizeTickInterval } from 'highcharts';
+import { Responsable } from 'src/app/models/Responsable';
+import { ResponsableService } from 'src/app/core/services/responsable.service';
 
 @Component({
   selector: 'app-area',
@@ -17,28 +18,43 @@ import { normalizeTickInterval } from 'highcharts';
 export class AreaComponent {
   @ViewChild('closebutton') closebutton!: ElementRef;
   @ViewChild('searchItem') searchItem!: ElementRef;
-  
+
   area!: Area;
   areaForm!: FormGroup;
   areas: Area[] = [];
   areasFilter: Area[] = [];
+
+  responsable!: Responsable;
+  responsableForm!: FormGroup;
+  responsables : Responsable[] = [];
+  responsablesFilter : Responsable[] = [];
+
   isLoading = LoadingStates.neutro;
   isModalAdd: boolean = true;
   formData: any;
   id!: number;
   idUpdate!: number;
-  responsable!: string;
+  estatusBtn = true;
+  verdadero = 'Activo';
+  falso = 'Inactivo';
+  estatusTag = this.verdadero;
 
   constructor(
     @Inject('CONFIG_PAGINATOR') public configPaginator: PaginationInstance,
     private spinnerService: NgxSpinnerService,
     private mensajeService: MensajeService,
     private formBuilder: FormBuilder,
-    private areasService : AreasService
-  ) { 
+    private areasService: AreasService,
+    private responsableService : ResponsableService
+  ) {
     this.areasService.refreshListAreas.subscribe(() => this.getAreas());
+    this.responsableService.refreshListResponsable.subscribe(() => this.getResponsables());
     this.getAreas();
+    this.getResponsables();
     this.creteForm();
+  }
+  setEstatus() {
+    this.estatusTag = this.estatusBtn ? this.verdadero : this.falso;
   }
 
   getAreas() {
@@ -46,6 +62,20 @@ export class AreaComponent {
     this.areasService.getAll().subscribe({
       next: (dataFromAPI) => {
         this.areas = dataFromAPI;
+        this.areasFilter = this.areas;
+        this.isLoading = LoadingStates.falseLoading;
+      },
+      error: () => {
+        this.isLoading = LoadingStates.errorLoading;
+      },
+    });
+  }
+
+  getResponsables() {
+    this.isLoading = LoadingStates.trueLoading;
+    this.responsableService.getAll().subscribe({
+      next: (dataFromAPI) => {
+        this.responsables = dataFromAPI;
         this.areasFilter = this.areas;
         this.isLoading = LoadingStates.falseLoading;
       },
@@ -73,14 +103,9 @@ export class AreaComponent {
         '',
         [
           Validators.required,
-          Validators.maxLength(40),
-          Validators.minLength(2),
-          Validators.pattern(
-            /^([a-zA-ZÀ-ÿ\u00C0-\u00FF]{2})[a-zA-ZÀ-ÿ\u00C0-\u00FF ]+$/
-          ),
         ],
       ],
-      estatus:[true],
+      estatus: [true],
     });
   }
 
@@ -90,56 +115,69 @@ export class AreaComponent {
     this.areaForm.patchValue({
       id: dto.id,
       nombre: dto.nombre,
+      responsable: dto.responsable ? dto.responsable.id : null,
+      estatus: dto.estatus,
     });
   }
 
   editarUsuario() {
     this.area = this.areaForm.value as Area;
     this.spinnerService.show();
-    this.areasService.put(this.idUpdate, this.area,).subscribe({
+    this.areasService.put(this.idUpdate, this.area).subscribe({
       next: () => {
         this.spinnerService.hide();
         this.mensajeService.mensajeExito('Area actualizada correctamente');
         this.resetForm();
       },
-      error : (error) => {
+      error: (error) => {
         this.spinnerService.hide();
         this.mensajeService.mensajeError(error);
       },
     });
   }
 
-  deleteItem(id: number, nameItem: string){
+  deleteItem(id: number, nameItem: string) {
     this.mensajeService.mensajeAdvertencia(
-      `¿Estás seguro de eliminar el area: ${nameItem}`, () => {
+      `¿Estás seguro de eliminar el area: ${nameItem}`,
+      () => {
         this.areasService.delete(id).subscribe({
-          next : () => {
+          next: () => {
             this.mensajeService.mensajeExito('Area borrada correctamente');
             this.configPaginator.currentPage = 1;
             this.searchItem.nativeElement.value = '';
           },
-          error : (error) => this.mensajeService.mensajeError(error),
+          error: (error) => this.mensajeService.mensajeError(error),
         });
       }
     );
   }
 
-  agregar() {
-    this.area = this.areaForm.value as Area;
+  agregar(): void {
+    const area = this.areaForm.value as Area;
+    const responsableId = this.areaForm.get('responsable')?.value;
+
+    const responsableSeleccionada = this.responsables.find(responsable => responsable.id === responsableId);
+    if (!responsableSeleccionada) {
+      this.mensajeService.mensajeError('El Responsable de resguardo seleccionado no es válido.');
+      return;
+    }
+
+    area.responsable = responsableSeleccionada;
+
     this.spinnerService.show();
-    this.areasService.post(this.area).subscribe({
+    this.areasService.post(area).subscribe({
       next: () => {
         this.spinnerService.hide();
-        this.mensajeService.mensajeExito('Area guardada correctamente');
+        this.mensajeService.mensajeExito('Área guardada correctamente');
         this.resetForm();
-        this.configPaginator.currentPage = 1;
       },
-      error : (error) => {
+      error: (error) => {
         this.spinnerService.hide();
         this.mensajeService.mensajeError(error);
-      },
+      }
     });
   }
+  
 
   resetForm() {
     this.closebutton.nativeElement.click();
@@ -157,57 +195,68 @@ export class AreaComponent {
   handleChangeAdd() {
     if (this.areaForm) {
       this.areaForm.reset();
-      this.isModalAdd = true;
+      if (this.areaForm) {
+        this.areaForm.reset();
+        const estatusControl = this.areaForm.get('estatus');
+        if (estatusControl) {
+          estatusControl.setValue(true);
+        }
+        this.isModalAdd = true;
+      }
     }
   }
 
-  
-  exportarDatosAExcel(){
-    if(this.areas.length = 0) {
-      console.warn('La lista de areas está vacía. No se puede exportar');
+  exportarDatosAExcel() {
+    if (this.areas.length === 0) {
+      console.warn('La lista de areas está vacía. No se puede exportar.');
       return;
     }
 
     const datosParaExportar = this.areas.map((area) => {
+      const estatus = area.estatus ? 'Activo' : 'Inactivo';
       return {
         '#': area.id,
-        Nombre : area.nombre,
+        'Nombre de area': area.nombre,
+        Responsable: area.responsable,
+        Estatus: estatus,
       };
     });
-    
-    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(datosParaExportar);
-    
+
+    const worksheet: XLSX.WorkSheet =
+      XLSX.utils.json_to_sheet(datosParaExportar);
     const workbook: XLSX.WorkBook = {
-      Sheets: { data: worksheet},
+      Sheets: { data: worksheet },
       SheetNames: ['data'],
     };
-    
     const excelBuffer: any = XLSX.write(workbook, {
       bookType: 'xlsx',
       type: 'array',
     });
+
+    this.guardarArchivoExcel(excelBuffer, 'Areas.xlsx');
   }
 
-  guardarArchivoExcel(buffer : any, nombreArchivo: string) {
-    const data : Blob = new Blob([buffer], {
-      type : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  guardarArchivoExcel(buffer: any, nombreArchivo: string) {
+    const data: Blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
-
     const url: string = window.URL.createObjectURL(data);
     const a: HTMLAnchorElement = document.createElement('a');
-
-    a.href= url;
+    a.href = url;
     a.download = nombreArchivo;
     a.click();
     window.URL.revokeObjectURL(url);
   }
-
   handleChangeSearch(event: any) {
     const inputValue = event.target.value;
     const valueSearch = inputValue.toLowerCase();
 
-    this.areasFilter = this.areas.filter((area) =>
-      area.nombre.toLowerCase().includes(valueSearch)
+    this.areasFilter = this.areas.filter(
+      (area) =>
+        area.nombre.toLowerCase().includes(valueSearch) ||
+        area.responsable?.nombres.toLowerCase().includes(valueSearch) ||
+        area.responsable?.apellidoMaterno.toLowerCase().includes(valueSearch) ||
+        area.responsable?.apellidoPaterno.toLowerCase().includes(valueSearch)
     );
 
     this.configPaginator.currentPage = 1;

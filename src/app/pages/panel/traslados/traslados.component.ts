@@ -9,7 +9,9 @@ import { Inmueble } from 'src/app/models/inmueble';
 import { InmueblesService } from 'src/app/core/services/inmueble.service';
 import { Area } from 'src/app/models/Area';
 import { AreasService } from 'src/app/core/services/areas.service';
+import { Options } from '@angular-slider/ngx-slider';
 
+import * as XLSX from 'xlsx';
 import * as QRCode from 'qrcode-generator';
 
 @Component({
@@ -39,14 +41,28 @@ export class TrasladosComponent {
   verdadero = 'Activo';
   falso = 'Inactivo';
   estatusTag = this.verdadero;
+  sliderValue: number = 0;
+  ceil: number = 100;
+  sliderOptions: Options = {
+    floor: 0,
+    ceil: this.ceil,
+  };  
+  filteredInmuebles = [];
 
+  public cameraActive: boolean = false;
+  @ViewChild('video', { static: false })
+  public video!: ElementRef;
+  @ViewChild('canvas', { static: false })
+  public canvas!: ElementRef;
+  public captures: Array<any> = [];
   constructor(
     @Inject('CONFIG_PAGINATOR') public configPaginator: PaginationInstance,
     private spinnerService: NgxSpinnerService,
     private mensajeService: MensajeService,
     private formBuilder: FormBuilder,
     public inmueblesService: InmueblesService,
-    public areasService: AreasService
+    public areasService: AreasService,
+    private fb: FormBuilder
   ) {
     this.inmueblesService.refreshListInmuebles.subscribe(() =>
       this.getInmuebles()
@@ -55,6 +71,20 @@ export class TrasladosComponent {
     this.creteForm();
     this.getAreas();
   }
+
+  ngOnInit(): void {
+    this.inmueblesForm.get('areasDeResgualdo')?.valueChanges.subscribe(areaId => {
+      this.filterInmuebles(areaId);
+    });
+    this.inmueblesForm.get('cantidad')?.valueChanges.subscribe(cantidad => {
+      this.ceil = cantidad;
+    });
+  }
+
+  filterInmuebles(areaId: number): void {
+    this.filteredInmuebles != this.inmuebles.filter(inmueble => inmueble.area?.id === areaId);
+  }
+
   setEstatus() {
     this.estatusTag = this.estatusBtn ? this.verdadero : this.falso;
   }
@@ -85,20 +115,15 @@ export class TrasladosComponent {
     this.inmueblesForm = this.formBuilder.group({
       id: [null],
       codigo: [''],
-      nombre: [
-        '',
-        [
-          Validators.maxLength(22),
-          Validators.minLength(2),
-          Validators.required,
-        ],
-      ],
+      nombre: [''],
       cantidad: ['', [Validators.maxLength(10), Validators.required]],
-      descripcion: ['', [Validators.required]],
+      descripcion: [''],
       imagenBase64: [''],
       qrBase64: [''],
       areasDeResgualdo: [null, Validators.required],
       estatus: [true],
+      costoUnitario:[''],
+      inmueble:[''],
     });
   }
 
@@ -165,7 +190,7 @@ export class TrasladosComponent {
         next: () => {
           this.spinnerService.hide();
           this.mensajeService.mensajeExito(
-            'Candidato actualizado correctamente'
+            'inmuebles actualizado correctamente'
           );
           this.resetForm();
           this.configPaginator.currentPage = 1;
@@ -259,11 +284,10 @@ export class TrasladosComponent {
   }
 
   agregar() {
-    this.inmueble = this.inmueblesForm.value as Inmueble;
-    const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
-    const qrBase64 = this.inmueblesForm.get('qrBase64')?.value;
+    const inmuebleid = this.inmueblesForm.get('inmueble')?.value;
     const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
-
+    const cantidad = this.inmueblesForm.get('cantidad')?.value;
+  
     // Buscar el nombre del área seleccionada
     const areaSeleccionada = this.areas.find((area) => area.id === areaId);
     if (!areaSeleccionada) {
@@ -272,35 +296,37 @@ export class TrasladosComponent {
       );
       return;
     }
-
-    // Crear el objeto inmueble con el área completa
-    const inmuebleSinId = { ...this.inmueble, area: areaSeleccionada };
-
-    console.log(inmuebleSinId);
-
-    if (imagenBase64 && qrBase64) {
-      const formData = { ...inmuebleSinId, imagenBase64, qrBase64 }; // Utilizar idGenerado como el valor del código
-      this.spinnerService.show();
-      this.inmueblesService.post(formData).subscribe({
-        next: () => {
-          this.spinnerService.hide();
-          this.mensajeService.mensajeExito('Inmueble guardado correctamente');
-          this.resetForm();
-          this.configPaginator.currentPage = 1;
-        },
-        error: (error) => {
-          this.spinnerService.hide();
-          this.mensajeService.mensajeError(error);
-        },
-      });
-    } else {
-      this.spinnerService.hide();
+  
+    // Buscar el inmueble seleccionado
+    const inmuebleSeleccionada = this.inmuebles.find((inmueble) => inmueble.id === inmuebleid);
+    if (!inmuebleSeleccionada) {
       this.mensajeService.mensajeError(
-        'Error: No se encontró una representación válida de la imagen o QR.'
+        'El inmueble de resguardo seleccionado no es válido.'
       );
+      return;
     }
+  
+    // Reemplazar el área en el objeto inmueble con el área seleccionada y establecer id como null
+    const inmuebleConIdNulo = { ...inmuebleSeleccionada,id: 0, area: areaSeleccionada, cantidad: cantidad };
+  
+    console.log(inmuebleConIdNulo);
+  
+    this.spinnerService.show();
+    this.inmueblesService.post(inmuebleConIdNulo).subscribe({
+      next: () => {
+        this.spinnerService.hide();
+        this.mensajeService.mensajeExito('Inmueble guardado correctamente');
+        this.resetForm();
+        this.configPaginator.currentPage = 1;
+      },
+      error: (error) => {
+        this.spinnerService.hide();
+        this.mensajeService.mensajeError(error);
+      },
+    });
   }
-
+  
+  
   handleChangeAdd() {
     this.isUpdatingImg = false;
     this.isUpdatingEmblema = false;
@@ -353,5 +379,72 @@ export class TrasladosComponent {
   }
   onPageChange(number: number) {
     this.configPaginator.currentPage = number;
+  }
+  exportarDatosAExcel() {
+    if (this.areas.length === 0) {
+      console.warn('La lista de areas está vacía. No se puede exportar.');
+      return;
+    }
+
+    const datosParaExportar = this.areas.map((area) => {
+      const estatus = area.estatus ? 'Activo' : 'Inactivo';
+      return {
+        '#': area.id,
+        'Nombre de area': area.nombre,
+        Responsable: area.responsable,
+        Estatus: estatus,
+      };
+    });
+
+    const worksheet: XLSX.WorkSheet =
+      XLSX.utils.json_to_sheet(datosParaExportar);
+    const workbook: XLSX.WorkBook = {
+      Sheets: { data: worksheet },
+      SheetNames: ['data'],
+    };
+    const excelBuffer: any = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    });
+
+    this.guardarArchivoExcel(excelBuffer, 'Areas.xlsx');
+  }
+
+  guardarArchivoExcel(buffer: any, nombreArchivo: string) {
+    const data: Blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url: string = window.URL.createObjectURL(data);
+    const a: HTMLAnchorElement = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+  mostrarImagenAmpliada2(urlImagen: string) {
+    const imagen = new Image();
+    imagen.onload = () => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+
+      if (context) {
+        canvas.width = imagen.width;
+        canvas.height = imagen.height;
+        context.drawImage(imagen, 0, 0);
+
+        const impresora = window.open('', '_blank');
+        if (impresora) {
+          impresora.document.write(
+            `<img src="${urlImagen}" style="max-width: 100%; max-height: 100%;" />`
+          );
+          impresora.document.write('<script>window.print();</script>');
+        } else {
+          console.error('No se pudo abrir la ventana de impresión.');
+        }
+      } else {
+        console.error('No se pudo obtener el contexto 2D del lienzo.');
+      }
+    };
+    imagen.src = urlImagen;
   }
 }

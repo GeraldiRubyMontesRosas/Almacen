@@ -1,30 +1,27 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { InmueblesRoutingModule } from './inmuebles-routing.module';
-import { InmueblesComponent } from './inmuebles.component';
+import { ResponsablesRoutingModule } from './responsables-routing.module';
+import { ResponsablesComponent } from './responsables.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { NgxSpinnerModule } from 'ngx-spinner';
-import { SharedModule  } from 'src/app/shared/shared.module';
-import { NgxSliderModule } from '@angular-slider/ngx-slider';
-
+import { SharedModule } from 'src/app/shared/shared.module';
 
 @NgModule({
   declarations: [
-    InmueblesComponent
+    ResponsablesComponent
   ],
   imports: [
     CommonModule,
-    InmueblesRoutingModule,
+    ResponsablesRoutingModule,
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
     NgxSpinnerModule,
     NgxPaginationModule,
     NgSelectModule,
-    NgxSliderModule
   ]
 })
-export class InmueblesModule { }
+export class ResponsablesModule { }

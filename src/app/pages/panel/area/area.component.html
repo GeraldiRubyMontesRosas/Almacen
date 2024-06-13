@@ -42,6 +42,12 @@
               <tr>
                 <th class="text-center">#</th>
                 <th style="text-transform: none; font-size: inherit">Nombre</th>
+                <th style="text-transform: none; font-size: inherit" class="w-1">
+                  Responsable
+                </th>
+                <th style="text-transform: none; font-size: inherit" class="text-center">
+                  Estatus
+                </th>
                 <th class="w-1" style="text-transform: none; font-size: inherit">
                   Acciones
                 </th>
@@ -53,10 +59,23 @@
                   let pointIndex = index
                 ">
                 <td class="text-center">
-                  {{ configPaginator.itemsPerPage * (configPaginator.currentPage - 1) + pointIndex + 1 }}
+                  {{
+                  configPaginator.itemsPerPage *
+                  (configPaginator.currentPage - 1) +
+                  pointIndex +
+                  1
+                  }}
                 </td>
-                <td>{{area.nombre}}</td>
-                <td>{{area.responsable}}</td>
+                <td>{{ area.nombre }}</td>
+                <td>{{ area.responsable?.nombreCompleto }}</td>
+                <td class="text-center">
+                  <ng-container *ngIf="area.estatus; else elseEstatus">
+                    <span class="badge bg-success me-1"> </span> Activo
+                  </ng-container>
+                  <ng-template #elseEstatus>
+                    <span class="badge bg-warning me-1"></span> Inactivo
+                  </ng-template>
+                </td>
                 <td>
                   <div class="d-flex justify-content-between">
                     <button class="btn btn-warning btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#modal-area"
@@ -108,24 +127,16 @@
                 <label class="form-label">Nombre*:</label>
                 <input type="text" class="form-control" formControlName="nombre" />
                 <div *ngIf="areaForm.get('nombre')?.touched" class="error-message">
-                  <div *ngIf="
-                      areaForm.get('nombre')?.hasError('required')
-                    ">
+                  <div *ngIf="areaForm.get('nombre')?.hasError('required')">
                     El nombre es obligatorio
                   </div>
-                  <div *ngIf="
-                      areaForm.get('nombre')?.hasError('minlength')
-                    ">
+                  <div *ngIf="areaForm.get('nombre')?.hasError('minlength')">
                     El nombre debe tener al menos 3 caracteres
                   </div>
-                  <div *ngIf="
-                      areaForm.get('nombre')?.hasError('pattern')
-                    ">
+                  <div *ngIf="areaForm.get('nombre')?.hasError('pattern')">
                     El nombre no puede tener números ni caracteres especiales
                   </div>
-                  <div *ngIf="
-                      areaForm.get('nombre')?.hasError('maxlength')
-                    ">
+                  <div *ngIf="areaForm.get('nombre')?.hasError('maxlength')">
                     <p style="color: red">
                       El nombre debe tener maximo 40 caracteres
                     </p>
@@ -134,29 +145,22 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">Responsable*:</label>
-                <input type="text" class="form-control" formControlName="responsable" />
+
+                <ng-select formControlName="responsable" #responsable [searchable]="false" [items]="responsables"
+                  bindLabel="nombreCompleto" bindValue="id" placeholder="Elegir" [clearable]="false">
+
+                  <ng-template ng-header-tmp>
+                    <input class="form-control" type="text" (input)="responsable.filter($any($event.target).value)" />
+                  </ng-template>
+
+                  <ng-template ng-option-tmp let-item="item" let-index="index">
+                    {{ item.nombreCompleto }}
+                  </ng-template>
+                </ng-select>
+
                 <div *ngIf="areaForm.get('responsable')?.touched" class="error-message">
-                  <div *ngIf="
-                      areaForm.get('responasable')?.hasError('required')
-                    ">
-                    El nombre del responasable es obligatorio
-                  </div>
-                  <div *ngIf="
-                      areaForm.get('responsable')?.hasError('minlength')
-                    ">
-                    El nombre del responsable debe tener al menos 3 caracteres
-                  </div>
-                  <div *ngIf="
-                      areaForm.get('responsable')?.hasError('pattern')
-                    ">
-                    El responsable no puede tener números ni caracteres especiales
-                  </div>
-                  <div *ngIf="
-                      areaForm.get('responsable')?.hasError('maxlength')
-                    ">
-                    <p style="color: red">
-                      El nombre del responsable debe tener maximo 40 caracteres
-                    </p>
+                  <div *ngIf="areaForm.get('responsable')?.hasError('required')">
+                    El inmueble debe ser seleccionado
                   </div>
                 </div>
 
@@ -165,12 +169,12 @@
                     <div class="mb-3 custom-green-switch">
                       <label for="estadoActivo" class="form-label">Estatus*:</label>
                       <label class="form-check form-switch checkbox-verde">
-                        <input class="form-check-input" type="checkbox" formControlName="estatus" [checked]="true"/>
+                        <input class="form-check-input" type="checkbox" formControlName="estatus" />
                         <span class="form-check-label" [ngClass]="
-                                      areaForm.get('estatus')?.value
-                                      ? 'text-success'
-                                      : 'text-danger'
-                                      ">
+                            areaForm.get('estatus')?.value
+                              ? 'text-success'
+                              : 'text-danger'
+                          ">
                           {{
                           areaForm.get("estatus")?.value
                           ? "Activo"

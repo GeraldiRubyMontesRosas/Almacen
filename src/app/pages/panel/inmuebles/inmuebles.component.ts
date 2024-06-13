@@ -5,11 +5,11 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { MensajeService } from 'src/app/core/services/mensaje.service';
 import { LoadingStates } from 'src/app/global/global';
 import * as QRCode from 'qrcode-generator';
-import { identifierName } from '@angular/compiler';
 import { InmueblesService } from 'src/app/core/services/inmueble.service';
 import { Inmueble } from 'src/app/models/inmueble';
 import { Area } from 'src/app/models/Area';
 import { AreasService } from 'src/app/core/services/areas.service';
+import { Options } from '@angular-slider/ngx-slider';
 import * as XLSX from 'xlsx';
 //prueba
 @Component({
@@ -39,6 +39,18 @@ export class InmueblesComponent {
   verdadero = 'Activo';
   falso = 'Inactivo';
   estatusTag = this.verdadero;
+  sliderValue: number = 50;
+  sliderOptions: Options = {
+    floor: 0,
+    ceil: 100
+  };
+  public cameraActive: boolean = false;
+
+  @ViewChild('video', { static: false })
+  public video!: ElementRef;
+  @ViewChild('canvas', { static: false })
+  public canvas!: ElementRef;
+  public captures: Array<any> = [];
 
   constructor(
     @Inject('CONFIG_PAGINATOR') public configPaginator: PaginationInstance,
@@ -55,6 +67,64 @@ export class InmueblesComponent {
     this.creteForm();
     this.getAreas();
   }
+  public ngAfterViewInit() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        this.video.nativeElement.srcObject = stream;
+        this.video.nativeElement.play();
+
+        // Esperar a que el video esté listo para obtener las dimensiones
+        this.video.nativeElement.onloadedmetadata = () => {
+          this.canvas.nativeElement.width = this.video.nativeElement.videoWidth;
+          this.canvas.nativeElement.height = this.video.nativeElement.videoHeight;
+        };
+      });
+    }
+  }
+
+  public capture() {
+    const context = this.canvas.nativeElement.getContext('2d');
+    context.drawImage(this.video.nativeElement, 0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
+    const base64Image = this.canvas.nativeElement.toDataURL('image/png').split(',')[1];
+    this.inmueblesForm.patchValue({
+      imagenBase64 : base64Image
+    });
+  }
+
+  toggleCamera() {
+    if (this.cameraActive) {
+      this.stopCamera();
+    } else {
+      this.startCamera();
+    }
+    this.cameraActive = !this.cameraActive;
+  }
+
+  startCamera() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        this.video.nativeElement.srcObject = stream;
+        this.video.nativeElement.play();
+
+        this.video.nativeElement.onloadedmetadata = () => {
+          this.canvas.nativeElement.width = this.video.nativeElement.videoWidth;
+          this.canvas.nativeElement.height = this.video.nativeElement.videoHeight;
+        };
+      });
+    }
+  }
+
+  stopCamera() {
+    let stream = this.video.nativeElement.srcObject as MediaStream;
+    if (stream) {
+      let tracks = stream.getTracks();
+      tracks.forEach(function(track) {
+        track.stop();
+      });
+      this.video.nativeElement.srcObject = null;
+    }
+  }
+
   setEstatus() {
     this.estatusTag = this.estatusBtn ? this.verdadero : this.falso;
   }
@@ -97,8 +167,9 @@ export class InmueblesComponent {
       descripcion: ['', [Validators.required]],
       imagenBase64: [''],
       qrBase64: [''],
-      areasDeResgualdo: [null, Validators.required],
+      area: [null, Validators.required],
       estatus: [true],
+      costo: ['', [Validators.maxLength(10), Validators.required]]
     });
   }
 
@@ -127,7 +198,8 @@ export class InmueblesComponent {
       imagenBase64: '',
       QrBase64: '',
       estatus: dto.estatus,
-      areasDeResgualdo: dto.area ? dto.area.id : null,
+      area: dto.area ? dto.area.id : null,
+      costo:dto.costo
     });
     console.log(dto);
   }
@@ -135,10 +207,10 @@ export class InmueblesComponent {
   editarInmueble() {
     this.inmueble = this.inmueblesForm.value as Inmueble;
     const inmueble = this.inmueblesForm.get('id')?.value;
-    const area = this.inmueblesForm.get('areasDeResgualdo')?.value;
+    const area = this.inmueblesForm.get('area')?.value;
     const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
     const QrBase64 = this.inmueblesForm.get('QrBase64')?.value;
-    const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
+    const areaId = this.inmueblesForm.get('area')?.value;
     console.log(imagenBase64);
     console.log(QrBase64);
     const areaSeleccionada = this.areas.find((area) => area.id === areaId);
@@ -288,7 +360,7 @@ export class InmueblesComponent {
     const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
     const qrBase64 = this.inmueblesForm.get('qrBase64')?.value;
     const codigo = this.inmueblesForm.get('idGenerado')?.value; // Usar idGenerado en lugar de codigo
-    const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
+    const areaId = this.inmueblesForm.get('area')?.value;
 
     // Buscar el nombre del área seleccionada
     const areaSeleccionada = this.areas.find((area) => area.id === areaId);
@@ -395,7 +467,7 @@ export class InmueblesComponent {
         Cantidad: inmueble.cantidad,
         Descripcion: inmueble.descripcion,
         Estatus: estatus,
-        AreasDeResgualdo: inmueble.area ? inmueble.area.nombre : null,
+        area: inmueble.area ? inmueble.area.nombre : null,
       };
     });
 
