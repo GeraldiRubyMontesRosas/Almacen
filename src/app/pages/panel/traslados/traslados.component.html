@@ -2,7 +2,7 @@
   <p style="color: white">Guardando...</p>
 </ngx-spinner>
 
-<app-page-header headerTitle="Traslados"></app-page-header>
+<app-page-header headerTitle="Inmuebles"></app-page-header>
 
 <div class="row">
   <div class="col-12">
@@ -132,76 +132,56 @@
           <div class="row">
             <div class="col-lg-12">
               <div class="mb-3">
-                <label class="form-label">Área de Origen*:</label>
+                <label class="form-label">Area de resguardo*:</label>
                 <ng-select 
-                  formControlName="areaOrigen" 
-                  #selectAreaOrigen 
+                  formControlName="areasDeResgualdo" 
+                  #selectareas 
                   [searchable]="false" 
                   [items]="areas"
                   bindLabel="nombre" 
                   bindValue="id" 
                   placeholder="Elegir" 
                   [clearable]="false">
+                  
                   <ng-template ng-header-tmp>
-                    <input class="form-control" type="text" (input)="selectAreaOrigen.filter($any($event.target).value)" />
+                    <input class="form-control" type="text" (input)="selectareas.filter($any($event.target).value)" />
                   </ng-template>
+                  
                   <ng-template ng-option-tmp let-item="item" let-index="index">
                     {{ item.nombre }}
                   </ng-template>
                 </ng-select>
-                <div *ngIf="inmueblesForm.get('areaOrigen')?.touched" class="error-message">
-                  <div *ngIf="inmueblesForm.get('areaOrigen')?.hasError('required')">
-                    El área de origen es requerida
+                
+                <div *ngIf="inmueblesForm.get('areasDeResgualdo')?.touched" class="error-message">
+                  <div *ngIf="inmueblesForm.get('areasDeResgualdo')?.hasError('required')">
+                    El area de resguardo es requerido
                   </div>
                 </div>
               </div>
               
               <div class="mb-3">
-                <label class="form-label">Área de Destino*:</label>
-                <ng-select 
-                  formControlName="areaDestino" 
-                  #selectAreaDestino 
-                  [searchable]="false" 
-                  [items]="areas"
-                  bindLabel="nombre" 
-                  bindValue="id" 
-                  placeholder="Elegir" 
-                  [clearable]="false">
-                  <ng-template ng-header-tmp>
-                    <input class="form-control" type="text" (input)="selectAreaDestino.filter($any($event.target).value)" />
-                  </ng-template>
-                  <ng-template ng-option-tmp let-item="item" let-index="index">
-                    {{ item.nombre }}
-                  </ng-template>
-                </ng-select>
-                <div *ngIf="inmueblesForm.get('areaDestino')?.touched" class="error-message">
-                  <div *ngIf="inmueblesForm.get('areaDestino')?.hasError('required')">
-                    El área de destino es requerida
-                  </div>
-                </div>
-              </div>
-
-              <!-- Resto del formulario -->
-              <div class="mb-3">
                 <label class="form-label">Inmuebles de la zona*:</label>
                 <ng-select 
-                  formControlName="inmueble" 
-                  #selectInmuebles
+                  formControlName="inmueblesZona" 
+                  #inmueblesZona 
                   [searchable]="false" 
-                  [items]="inmuebles"
+                  [items]="filteredInmuebles"
                   bindLabel="nombre" 
                   bindValue="id" 
                   placeholder="Elegir" 
                   [clearable]="false">
+                  
                   <ng-template ng-header-tmp>
-                    <input class="form-control" type="text" (input)="selectInmuebles.filter($any($event.target).value)" />
+                    <input class="form-control" type="text" (input)="inmueblesZona.filter($any($event.target).value)" />
                   </ng-template>
+                  
                   <ng-template ng-option-tmp let-item="item" let-index="index">
                     {{ item.nombre }}
                   </ng-template>
                 </ng-select>
-                <div *ngIf="inmueblesForm.get('inmueble')?.touched" class="error-message">
-                  <div *ngIf="inmueblesForm.get('inmueble')?.hasError('required')">
+                
+                <div *ngIf="inmueblesForm.get('inmueblesZona')?.touched" class="error-message">
+                  <div *ngIf="inmueblesForm.get('inmueblesZona')?.hasError('required')">
                     El inmueble debe ser seleccionado
                   </div>
                 </div>
@@ -231,6 +211,19 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+<div class="modal modal-blur" id="modal-imagen-ampliada" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true" style="background: rgba(0, 0, 0, 0.2)">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" aria-label="Close" (click)="cerrarModal()"></button>
+      </div>
+      <div class="modal-body">
+        <img *ngIf="imagenAmpliada" [src]="imagenAmpliada" alt="Imagen Ampliada" class="w-100" />
+      </div>
     </div>
   </div>
 </div>
