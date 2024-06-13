@@ -5,7 +5,6 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { MensajeService } from 'src/app/core/services/mensaje.service';
 import { LoadingStates } from 'src/app/global/global';
 
-
 import { ResponsableService } from 'src/app/core/services/responsable.service';
 import { Responsable } from 'src/app/models/Responsable';
 
@@ -70,7 +69,7 @@ export class ResponsablesComponent {
           Validators.required,
         ],
       ],
-      fechaDeNacimiento: [[Validators.required]],
+      fechaNacimiento: [[Validators.required]],
       estatus: [true],
     });
   }
@@ -88,13 +87,22 @@ export class ResponsablesComponent {
       },
     });
   }
-
+  formatoFecha(fecha: string): string {
+    // Aquí puedes utilizar la lógica para formatear la fecha según tus necesidades
+    const fechaFormateada = new Date(fecha).toISOString().split('T')[0];
+    return fechaFormateada;
+  }
   setDataModalUpdate(dto: Responsable) {
     this.isModalAdd = false;
     this.idUpdate = dto.id;
+    const fechaFormateada = this.formatoFecha(dto.fechaNacimiento);
     this.responsablesForm.patchValue({
       id: dto.id,
       nombres: dto.nombres,
+      apellidoPaterno: dto.apellidoPaterno,
+      apellidoMaterno: dto.apellidoMaterno,
+      fechaNacimiento: fechaFormateada,
+      estatus: dto.estatus,
     });
   }
 
@@ -105,13 +113,11 @@ export class ResponsablesComponent {
 
   editarUsuario() {
     this.responsable = this.responsablesForm.value as Responsable;
-    this.handleFechaDeNacimiento();
-    this.handleNombreCompleto();
     this.responsableService.put(this.idUpdate, this.responsable).subscribe({
       next: () => {
         this.spinnerService.hide();
         this.mensajeService.mensajeExito(
-          'Responsable actualizada correctamente'
+          'Responsable actualizado correctamente'
         );
         this.resetForm();
       },
@@ -124,13 +130,11 @@ export class ResponsablesComponent {
 
   agregar() {
     this.responsable = this.responsablesForm.value as Responsable;
-    this.handleFechaDeNacimiento();
-    this.handleNombreCompleto();
     this.spinnerService.show();
     this.responsableService.post(this.responsable).subscribe({
       next: () => {
         this.spinnerService.hide();
-        this.mensajeService.mensajeExito('Responsable guardada correctamente');
+        this.mensajeService.mensajeExito('Responsable guardado correctamente');
         this.resetForm();
         this.configPaginator.currentPage = 1;
       },
@@ -156,7 +160,7 @@ export class ResponsablesComponent {
         this.responsableService.delete(id).subscribe({
           next: () => {
             this.mensajeService.mensajeExito(
-              'Responsable borrada correctamente'
+              'Responsable borrado correctamente'
             );
             this.configPaginator.currentPage = 1;
             this.searchItem.nativeElement.value = '';
@@ -170,6 +174,10 @@ export class ResponsablesComponent {
   handleChangeAdd() {
     if (this.responsablesForm) {
       this.responsablesForm.reset();
+      const estatusControl = this.responsablesForm.get('estatus');
+      if (estatusControl) {
+        estatusControl.setValue(true);
+      }
       this.isModalAdd = true;
     }
   }
@@ -178,8 +186,10 @@ export class ResponsablesComponent {
     const inputValue = event.target.value;
     const valueSearch = inputValue.toLowerCase();
 
-    this.responsablesFilter = this.responsables.filter((responsable) =>
-      responsable.nombreCompleto.toLowerCase().includes(valueSearch)
+    this.responsablesFilter = this.responsables.filter(
+      (responsable) =>
+        responsable.nombreCompleto.toLowerCase().includes(valueSearch) ||
+        responsable.edad.toString().includes(valueSearch)
     );
 
     this.configPaginator.currentPage = 1;
@@ -208,13 +218,18 @@ export class ResponsablesComponent {
     }
 
     const datosParaExportar = this.responsables.map((responsables) => {
+      const estatus = responsables.estatus ? 'Activo' : 'Inactivo';
+      const fechaFormateada = new Date(responsables.fechaNacimiento)
+        .toISOString()
+        .split('T')[0];
       return {
         '#': responsables.id,
         Nombre: responsables.nombres,
-        ApellidoMaterno: responsables.apellidoMaterno,
         ApellidoPaterno: responsables.apellidoPaterno,
-        FechaDeNacimiento: responsables.strFechaNacimiento,
+        ApellidoMaterno: responsables.apellidoMaterno,
+        'Fecha de nacimiento': fechaFormateada,
         Edad: responsables.edad,
+        Estatus: estatus,
       };
     });
 
@@ -231,51 +246,4 @@ export class ResponsablesComponent {
 
     this.guardarArchivoExcel(excelBuffer, 'Responsables.xlsx');
   }
-
-  calculateAge(birthDate: Date): number {
-    const today = new Date();
-    const birthYear = birthDate.getFullYear();
-    const birthMonth = birthDate.getMonth();
-    const birthDay = birthDate.getDate();
-
-    let age = today.getFullYear() - birthYear;
-    const monthDifference = today.getMonth() - birthMonth;
-    const dayDifference = today.getDate() - birthDay;
-
-    if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
-      age--;
-    }
-
-    return age;
-  }
-
-  getControlValue = (controlName: string) => {
-    const control = this.responsablesForm.get(controlName);
-    return control ? control.value : null;
-  };
-  
-  handleFechaDeNacimiento = () => {
-    const fechaDeNacimientoValue = this.getControlValue('fechaDeNacimiento');
-    if (fechaDeNacimientoValue) {
-      const fechaDeNacimiento: Date = new Date(fechaDeNacimientoValue);
-      this.responsable.edad = this.calculateAge(fechaDeNacimiento);
-      this.responsable.strFechaNacimiento = fechaDeNacimiento.toISOString();
-    } else {
-      console.error('No se pudo obtener la fecha de nacimiento del formulario.');
-    }
-  };
-  
-  handleNombreCompleto = () => {
-    const nombresValue = this.getControlValue('nombres');
-    const apellidoPaternoValue = this.getControlValue('apellidoPaterno');
-    const apellidoMaternoValue = this.getControlValue('apellidoMaterno');
-  
-    if (nombresValue && apellidoPaternoValue && apellidoMaternoValue) {
-      this.responsable.nombreCompleto = `${nombresValue} ${apellidoPaternoValue} ${apellidoMaternoValue}`;
-    } else {
-      console.error('No se pudo obtener alguno de los valores necesarios para el nombre completo.');
-      this.mensajeService.mensajeError('No se pudo obtener alguno de los valores necesarios para el nombre completo.');
-    }
-  };
-  
 }

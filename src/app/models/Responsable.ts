@@ -3,7 +3,7 @@ export interface Responsable{
     nombres : string;
     apellidoPaterno: string;
     apellidoMaterno: string;
-    fechaDeNacimiento : Date;
+    fechaNacimiento : string;
     edad : number;
     nombreCompleto : string;
     estatus : boolean;
