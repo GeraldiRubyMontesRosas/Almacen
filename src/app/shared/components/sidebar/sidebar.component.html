@@ -71,6 +71,13 @@
                 </span>
                 <span class="nav-link-title">Traslados</span>
               </a>
+              <a class="dropdown-item" [routerLink]="['Responsables']" routerLinkActive="active"
+                #rlDashboard="routerLinkActive" (click)="cerrarMenu()">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-users"></i>
+                </span>
+                <span class="nav-link-title">Responsables</span>
+              </a>
             </div>
           </div>
         </ul>

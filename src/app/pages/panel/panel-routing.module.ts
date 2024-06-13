@@ -44,9 +44,9 @@ const routes: Routes = [
           import('./traslados/traslados.module').then((i) => i.TrasladosModule),
       },
       {
-        path: 'Usuarios',
-        loadChildren: () => 
-          import('./usuarios/usuarios.module').then((i) => i.UsuariosModule),
+        path: 'Responsables',
+        loadChildren: () =>
+          import('./responsables/responsables.module').then((i) => i.ResponsablesModule),
       },
     ],
   },

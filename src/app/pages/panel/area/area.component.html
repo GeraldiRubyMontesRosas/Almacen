@@ -146,18 +146,17 @@
               <div class="mb-3">
                 <label class="form-label">Responsable*:</label>
 
-                <ng-select formControlName="responsable" #responsable [searchable]="false"
-                [items]="responsables" bindLabel="nombreCompleto" bindValue="id"
-                placeholder="Elegir" [clearable]="false">
-   
-       <ng-template ng-header-tmp>
-         <input class="form-control" type="text" (input)="responsable.filter($any($event.target).value)" />
-       </ng-template>
-   
-       <ng-template ng-option-tmp let-item="item" let-index="index">
-         {{ item.nombreCompleto }}
-       </ng-template>
-     </ng-select>
+                <ng-select formControlName="responsable" #responsable [searchable]="false" [items]="responsables"
+                  bindLabel="nombreCompleto" bindValue="id" placeholder="Elegir" [clearable]="false">
+
+                  <ng-template ng-header-tmp>
+                    <input class="form-control" type="text" (input)="responsable.filter($any($event.target).value)" />
+                  </ng-template>
+
+                  <ng-template ng-option-tmp let-item="item" let-index="index">
+                    {{ item.nombreCompleto }}
+                  </ng-template>
+                </ng-select>
 
                 <div *ngIf="areaForm.get('responsable')?.touched" class="error-message">
                   <div *ngIf="areaForm.get('responsable')?.hasError('required')">
