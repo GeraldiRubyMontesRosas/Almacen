@@ -91,13 +91,14 @@ export class InmueblesComponent {
     });
   }
 
-  toggleCamera() {
-    if (this.cameraActive) {
-      this.stopCamera();
-    } else {
-      this.startCamera();
-    }
+  toggleCamera(event: Event): void {
+    event.preventDefault();
     this.cameraActive = !this.cameraActive;
+    if (this.cameraActive) {
+      this.startCamera();
+    } else {
+      this.stopCamera();
+    }
   }
 
   startCamera() {
