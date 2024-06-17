@@ -27,7 +27,7 @@ export class ScannerComponent {
     this.cameraActive = !this.cameraActive;
   }
 
-  handleScanSuccess(result: string) {
-    console.log('Scan result:', result);
+  handleScanSuccess(e:any) {
+    console.log('Scan result:', e);
   }
 }
