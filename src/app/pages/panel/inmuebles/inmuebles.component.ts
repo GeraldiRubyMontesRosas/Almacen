@@ -261,7 +261,7 @@ export class InmueblesComponent {
         next: () => {
           this.spinnerService.hide();
           this.mensajeService.mensajeExito(
-            'Candidato actualizado correctamente'
+            'Inmueble actualizado correctamente'
           );
           this.resetForm();
           this.configPaginator.currentPage = 1;
@@ -284,7 +284,7 @@ export class InmueblesComponent {
       () => {
         this.inmueblesService.delete(id).subscribe({
           next: () => {
-            this.mensajeService.mensajeExito('Candidato borrado correctamente');
+            this.mensajeService.mensajeExito('Inmueble borrado correctamente');
             this.configPaginator.currentPage = 1;
             this.searchItem.nativeElement.value = '';
           },
@@ -359,7 +359,6 @@ export class InmueblesComponent {
     this.inmueble = this.inmueblesForm.value as Inmueble;
     const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
     const qrBase64 = this.inmueblesForm.get('qrBase64')?.value;
-    const codigo = this.inmueblesForm.get('idGenerado')?.value; // Usar idGenerado en lugar de codigo
     const areaId = this.inmueblesForm.get('area')?.value;
 
     // Buscar el nombre del área seleccionada
