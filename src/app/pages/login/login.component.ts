@@ -53,7 +53,7 @@ export class LoginComponent implements OnInit {
         Validators.compose([Validators.required, Validators.minLength(3)]),
       ],
       password: [
-        '123',
+        '12345678',
         Validators.compose([Validators.required, Validators.minLength(3)]),
       ],
     });

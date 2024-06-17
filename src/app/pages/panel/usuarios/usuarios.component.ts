@@ -262,7 +262,8 @@ export class UsuariosComponent {
     this.usuario = this.usuarioForm.value as Usuario;
     const rolId = this.usuarioForm.get('rol')?.value;
     const responsableId = this.usuarioForm.get('responsable')?.value;
-
+    const nombrecompleto = this.usuarioForm.get('nombre')?.value;
+    
     // Find the corresponding rol and responsable objects
     const rolSeleccionado = this.rol.find((rol) => rol.id === rolId);
     const responsableSeleccionado = this.responsables.find(
@@ -281,6 +282,7 @@ export class UsuariosComponent {
       ...this.usuario,
       rol: rolSeleccionado,
       responsable: responsableSeleccionado,
+      nombreCompleto: nombrecompleto
     };
 
     this.spinnerService.show();
