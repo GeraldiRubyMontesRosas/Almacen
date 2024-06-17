@@ -18,6 +18,7 @@ export class InicioComponent {
 
   setDataUser() {
     this.dataObject = this.securityService.getDataUser();
+    console.log('si',this.dataObject)
   }
 
 }

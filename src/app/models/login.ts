@@ -6,6 +6,7 @@ export interface AppUser {
 export interface AppUserAuth {
     usuarioId: number;
     nombreCompleto: string;
+    nombre: string;
     email: string;
     rolId: number;
     rol: string;

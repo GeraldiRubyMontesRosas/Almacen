@@ -7,7 +7,7 @@ const routes: Routes = [
   {
     path: '',
     component: InicioComponent,
-    canActivate: [AuthGuard], data: { claimType: 'CanAccessInicio'}
+    //canActivate: [AuthGuard], data: { claimType: 'CanAccessInicio'}
   }
 ];
 
