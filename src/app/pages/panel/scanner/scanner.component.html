@@ -1,12 +1,447 @@
-<div style="display: flex; flex-direction: column; height: 100vh; align-items: center; justify-content: space-between;">
+<div
+  style="
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    align-items: center;
+    justify-content: space-between;
+  "
+>
   <div>
-    <zxing-scanner #scanner [hidden]="!cameraActive" (scanSuccess)="handleScanSuccess($event)" style="max-width: 100%; height: auto; display: flex; align-items: center; justify-content: center;"></zxing-scanner>
+    <zxing-scanner
+      #scanner
+      [hidden]="!cameraActive"
+      (scanSuccess)="handleScanSuccess($event)"
+      style="
+        max-width: 100%;
+        height: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      "
+    ></zxing-scanner>
   </div>
-  <div class="mt-3">  
-    <button type="button" class="btn btn-success"
-      style="width: 100%; height: 100%; margin-bottom: 20px; position: relative;" (click)="toggleCamera()">
-      <i class="ti ti-camera" style="font-size: 24px; position: absolute; top: 50%; transform: translateY(-50%); left: 50%; transform: translateX(-50%);"></i>
-      <span style="display: block; text-align: center; margin-top: 10px;">{{ cameraActive ? 'Detener' : 'Activar' }} Cámara</span>
+  <div class="mt-3">
+    <button
+      type="button"
+      class="btn btn-success"
+      style="width: 100%; height: 100%; margin-bottom: 20px; position: relative"
+      (click)="toggleCamera()"
+    >
+      <i
+        class="ti ti-camera"
+        style="
+          font-size: 24px;
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+        "
+      ></i>
+      <span style="display: block; text-align: center; margin-top: 10px"
+        >{{ cameraActive ? "Detener" : "Activar" }} Cámara</span
+      >
     </button>
+    <button
+      type="button"
+      class="btn btn-success"
+      style="width: 100%; height: 100%; margin-bottom: 20px; position: relative"
+      (click)="toggleCamera()"
+    >
+      <i
+        class="ti ti-camera"
+        style="
+          font-size: 24px;
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+        "
+      ></i>
+      <span style="display: block; text-align: center; margin-top: 10px"
+        >{{ cameraActive ? "Detener" : "Activar" }} Cámara</span
+      >
+    </button>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <ng-container [ngSwitch]="isLoading">
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table table-striped">
+            <thead>
+              <tr>
+                <th
+                  style="text-transform: none; font-size: inherit"
+                  class="text-center"
+                >
+                  #
+                </th>
+                <th style="text-transform: none; font-size: inherit">id</th>
+                <th style="text-transform: none; font-size: inherit">Nombre</th>
+                <th
+                  style="text-transform: none; font-size: inherit"
+                  class="w-1"
+                >
+                  Area
+                </th>
+                <th
+                  style="text-transform: none; font-size: inherit"
+                  class="w-1"
+                >
+                  Cantidad
+                </th>
+                <th
+                  style="text-transform: none; font-size: inherit"
+                  class="w-1"
+                >
+                  Imagen
+                </th>
+                <th
+                  style="text-transform: none; font-size: inherit"
+                  class="w-1"
+                >
+                  Codigo Qr
+                </th>
+                <th
+                  style="text-transform: none; font-size: inherit"
+                  class="w-1"
+                >
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="inmuebleFilter.length === 0">
+                <td colspan="6" class="text-center">No hay datos disponibles</td>
+              </tr>
+              <tr
+                *ngFor="
+                  let inmueble of inmuebleFilter | paginate : configPaginator;
+                  let pointIndex = index
+                "
+              >
+                <td class="text-center">
+                  {{
+                    configPaginator.itemsPerPage *
+                      (configPaginator.currentPage - 1) +
+                      pointIndex +
+                      1
+                  }}
+                </td>
+                <td class="text-muted">{{ inmueble.codigo }}</td>
+                <td class="text-muted">{{ inmueble.nombre }}</td>
+                <td class="text-muted">{{ inmueble.area?.nombre }}</td>
+                <td class="text-muted">{{ inmueble.cantidad }}</td>
+                <td class="text-muted">
+                  <div class="flex justify-center items-center">
+                    <img
+                      src="{{ inmueble.imagen }}"
+                      alt="Foto de {{ inmueble.imagen }}"
+                      width="50"
+                      height="50"
+                      (click)="mostrarImagenAmpliada(inmueble.imagen)"
+                    />
+                  </div>
+                </td>
+                <td class="text-muted">
+                  <div class="flex justify-center items-center">
+                    <img
+                      src="{{ inmueble.qr }}"
+                      alt="Foto de {{ inmueble.qr }}"
+                      width="50"
+                      height="50"
+                      (click)="mostrarImagenAmpliada2(inmueble.qr)"
+                    />
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex justify-content-between">
+                    <button
+                      class="btn btn-warning btn-icon btn-sm"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modal-inmuebles"
+                      (click)="setDataModalUpdate(inmueble)"
+                    >
+                      <i class="ti ti-edit"></i>
+                    </button>
+                    <button
+                      class="btn btn-danger btn-icon btn-sm"
+                      (click)="deleteItem(inmueble.id, inmueble.nombre)"
+                    >
+                      <i class="ti ti-eraser"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <app-no-results *ngSwitchCase="4"></app-no-results>
+      </ng-container>
+
+      <div class="card-footer d-flex align-items-center">
+        <p class="m-0 text-muted">
+          Total de registros: <b>{{ inmuebleFilter.length }}</b>
+        </p>
+        <div class="m-0 ms-auto">
+          <pagination-controls
+            (pageChange)="onPageChange($event)"
+            previousLabel=""
+            nextLabel=""
+          >
+          </pagination-controls>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal modal-blur fade"
+  id="modal-inmuebles"
+  tabindex="-1"
+  role="dialog"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ isModalAdd ? "Agregar" : "Actualizar" }} inmueble
+        </h5>
+        <button
+          #closebutton
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <form [formGroup]="inmueblesForm" (ngSubmit)="submit()">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-lg-12">
+              <div class="mb-3">
+                <label class="form-label">Nombre*:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="nombre"
+                />
+                <div
+                  *ngIf="inmueblesForm.get('nombre')?.touched"
+                  class="error-message"
+                >
+                  <div
+                    *ngIf="inmueblesForm.get('nombre')?.hasError('required')"
+                  >
+                    El nombre es obligatoria
+                  </div>
+                  <div
+                    *ngIf="inmueblesForm.get('nombre')?.hasError('minlength')"
+                  >
+                    El nombre debe tener al menos 3 caracteres
+                  </div>
+                  <div
+                    *ngIf="inmueblesForm.get('nombre')?.hasError('maxlength')"
+                  >
+                    <p style="color: red">
+                      El nombre debe tener maximo 22 caracteres
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Cantidad*:</label>
+                <ngx-slider
+                  formControlName="cantidad"
+                  [value]="sliderValue"
+                  [options]="sliderOptions"
+                ></ngx-slider>
+                <div>
+                  Valor del slider: {{ inmueblesForm.get("cantidad")?.value }}
+                </div>
+                <div
+                  *ngIf="inmueblesForm.get('cantidad')?.touched"
+                  class="error-message"
+                >
+                  <div
+                    *ngIf="inmueblesForm.get('cantidad')?.hasError('required')"
+                  >
+                    La cantidad es obligatoria
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Costo unitario*:</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  formControlName="costo"
+                />
+                <div
+                  *ngIf="inmueblesForm.get('costo')?.touched"
+                  class="error-message"
+                >
+                  <div *ngIf="inmueblesForm.get('costo')?.hasError('required')">
+                    El costo es obligatorio
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Descripcion*:</label>
+                <textarea
+                  class="form-control"
+                  formControlName="descripcion"
+                ></textarea>
+                <div
+                  *ngIf="inmueblesForm.get('descripcion')?.touched"
+                  class="error-message"
+                >
+                  <div
+                    *ngIf="
+                      inmueblesForm.get('descripcion')?.hasError('required')
+                    "
+                  >
+                    La descripción es obligatoria
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="mb-3">
+                  <label class="form-label">Imagen*:</label>
+                  <div class="row">
+                    <div class="col-lg-8">
+                      <input
+                        type="file"
+                        class="form-control"
+                        formControlName="imagenBase64"
+                        (change)="onFileChange($event)"
+                        class="col-lg-8"
+                        #fileInput
+                      />
+                      <div class="mb-3">
+                        <img
+                          class="img"
+                          *ngIf="inmueblesForm.get('imagenBase64')?.value"
+                          [src]="
+                            'data:image/jpg;base64,' +
+                            inmueblesForm.get('imagenBase64')?.value
+                          "
+                          width="50%"
+                          height="50%"
+                          alt="Vista previa de la imagen"
+                        />
+                      </div>
+                    </div>
+                    <div class="col-lg-4">
+                      <div *ngIf="cameraActive">
+                        <video #video width="160" height="120" autoplay></video>
+                        <button
+                          (click)="capture()"
+                          class="btn btn-primary w-50"
+                        >
+                          Capturar
+                        </button>
+                      </div>
+                      <button
+                        class="btn btn-success"
+                        (click)="toggleCamera2($event)"
+                      >
+                        {{ cameraActive ? "Detener" : "Iniciar" }} Cámara
+                      </button>
+                      <canvas #canvas style="display: none"></canvas>
+                    </div>
+                    <div *ngIf="isUpdatingImg" class="img-preview my-1">
+                      <img [src]="imgPreview" alt="" class="img-fluid" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Area de resguardo*:</label>
+                <ng-select
+                  formControlName="area"
+                  #selectareas
+                  [searchable]="false"
+                  [items]="areas"
+                  bindLabel="nombre"
+                  bindValue="id"
+                  placeholder="Elegir"
+                  [clearable]="false"
+                >
+                  <ng-template ng-header-tmp>
+                    <input
+                      class="form-control"
+                      type="text"
+                      (input)="selectareas.filter($any($event.target).value)"
+                    />
+                  </ng-template>
+                  <ng-template ng-option-tmp let-item="item" let-index="index">
+                    {{ item.nombre }}
+                  </ng-template>
+                </ng-select>
+                <div
+                  *ngIf="inmueblesForm.get('area')?.touched"
+                  class="error-message"
+                >
+                  <div *ngIf="inmueblesForm.get('area')?.hasError('required')">
+                    El area de resguardo es requerido
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-2">
+                <div class="mb-3 custom-green-switch">
+                  <label for="estadoActivo" class="form-label">Estatus*:</label>
+                  <label class="form-check form-switch checkbox-verde">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      formControlName="estatus"
+                    />
+                    <span
+                      class="form-check-label"
+                      [ngClass]="
+                        inmueblesForm.get('estatus')?.value
+                          ? 'text-success'
+                          : 'text-danger'
+                      "
+                    >
+                      {{
+                        inmueblesForm.get("estatus")?.value
+                          ? "Activo"
+                          : "Inactivo"
+                      }}
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p
+          class="form-label"
+          style="margin-left: 20px; color: red; font-weight: bold"
+        >
+          Todos los campos marcados con * son requeridos
+        </p>
+        <div class="modal-footer">
+          <button
+            type="submit"
+            class="btn btn-success"
+            [disabled]="!inmueblesForm.valid"
+          >
+            {{ isModalAdd ? "Agregar" : "Actualizar" }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>

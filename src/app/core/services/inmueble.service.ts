@@ -27,7 +27,7 @@ export class InmueblesService {
   }
 
   getByCode(code: string) {
-    return this.http.get<Inmueble>(`${this.route}/obtener-por-codigo/${code}`);
+    return this.http.get<Inmueble[]>(`${this.route}/obtener-por-codigo/${code}`);
   }
 
   getAll() {
