@@ -190,20 +190,24 @@
               <div>
                 <div class="mb-3">
                   <label class="form-label">Imagen*:</label>
-                  <div class="row">
-                    <div class="col-lg-8">
-                      <input type="file" class="form-control" formControlName="imagenBase64" (change)="onFileChange($event)" class="col-lg-8" #fileInput />
-                      <div class="mb-3">
-                        <img class="img" *ngIf="inmueblesForm.get('imagenBase64')?.value" [src]="'data:image/jpg;base64,' + inmueblesForm.get('imagenBase64')?.value" width="50%" height="50%" alt="Vista previa de la imagen" />
+                  <div class="row"> 
+                    <div class="col-8">
+                      <div>
+                        <img class="img" *ngIf="inmueblesForm.get('imagenBase64')?.value" [src]="'data:image/jpg;base64,' + inmueblesForm.get('imagenBase64')?.value" width="80%" height="80%" alt="Vista previa de la imagen" class="mb-2" />
+                      </div>
+                      <div class="input-group">
+                        <input type="file" class="form-control" formControlName="imagenBase64" (change)="onFileChange($event)" #fileInput />
                       </div>
                     </div>
-                    <div class="col-lg-4">
-                      <div *ngIf="cameraActive">
-                        <video #video width="160" height="120" autoplay></video>
-                        <button (click)="capture()" class="btn btn-primary w-50">Capturar</button>
+                    <div class="col-4 d-flex justify-content-center align-items-center">
+                      <div>
+                        <div *ngIf="cameraActive">
+                          <video #video width="160" height="120" autoplay></video>
+                          <button (click)="capture()" class="btn btn-secondary w-100 mb-1">Capturar</button>
+                        </div>
+                        <button class="btn btn-primary w-100" (click)="toggleCamera($event)">{{ cameraActive ? 'Detener' : 'Iniciar' }} Cámara</button>
+                        <canvas #canvas style="display:none;"></canvas>
                       </div>
-                      <button class="btn btn-success" (click)="toggleCamera($event)">{{ cameraActive ? 'Detener' : 'Iniciar' }} Cámara</button>
-                      <canvas #canvas style="display:none;"></canvas>
                     </div>
                   </div>
                 </div>
