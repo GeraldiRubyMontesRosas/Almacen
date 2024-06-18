@@ -1,5 +1,11 @@
-import { Component, ElementRef, ViewChild,OnInit, Inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {
+  Component,
+  ElementRef,
+  ViewChild,
+  OnInit,
+  Inject,
+} from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Options } from '@angular-slider/ngx-slider';
 import { PaginationInstance } from 'ngx-pagination';
 import { NgxSpinnerService } from 'ngx-spinner';
@@ -39,7 +45,7 @@ export class ScannerComponent {
   sliderValue: number = 50;
   sliderOptions: Options = {
     floor: 0,
-    ceil: 100
+    ceil: 100,
   };
   codigo!: string;
 
@@ -48,7 +54,7 @@ export class ScannerComponent {
   @ViewChild('canvas', { static: false })
   public canvas!: ElementRef;
   public captures: Array<any> = [];
-  
+
   constructor(
     @Inject('CONFIG_PAGINATOR') public configPaginator: PaginationInstance,
     private formBuilder: FormBuilder,
@@ -59,12 +65,11 @@ export class ScannerComponent {
   ) {
     this.creteForm();
     this.getAreas();
-   
   }
   toggleCamera() {
     this.cameraActive = !this.cameraActive;
   }
-  
+
   creteForm() {
     this.inmueblesForm = this.formBuilder.group({
       id: [null],
@@ -83,10 +88,9 @@ export class ScannerComponent {
       qrBase64: [''],
       area: [null, Validators.required],
       estatus: [true],
-      costo: ['', [Validators.maxLength(10), Validators.required]]
+      costo: ['', [Validators.maxLength(10), Validators.required]],
     });
   }
-
 
   handleScanSuccess(e: any) {
     console.log('Scan result:', e);
@@ -97,8 +101,8 @@ export class ScannerComponent {
         if (dataFromAPI) {
           this.inmuebles = dataFromAPI;
           this.inmuebleFilter = this.inmuebles;
-          console.log('1',this.inmuebles)
-        } 
+          console.log('1', this.inmuebles);
+        }
         this.isLoading = LoadingStates.falseLoading;
         this.cameraActive = false;
       },
@@ -130,7 +134,6 @@ export class ScannerComponent {
     }
   }
 
-  
   deleteItem(id: number, nameItem: string) {
     this.mensajeService.mensajeAdvertencia(
       `¿Estás seguro de eliminar el inmueble: ${nameItem}?`,
@@ -171,7 +174,7 @@ export class ScannerComponent {
       QrBase64: '',
       estatus: dto.estatus,
       area: dto.area ? dto.area.id : null,
-      costo:dto.costo
+      costo: dto.costo,
     });
     console.log(dto);
   }
@@ -210,7 +213,7 @@ export class ScannerComponent {
   submit() {
     if (this.isModalAdd === false) {
       this.editarInmueble();
-    } 
+    }
   }
 
   editarInmueble() {
@@ -294,10 +297,18 @@ export class ScannerComponent {
   }
   public capture() {
     const context = this.canvas.nativeElement.getContext('2d');
-    context.drawImage(this.video.nativeElement, 0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
-    const base64Image = this.canvas.nativeElement.toDataURL('image/png').split(',')[1];
+    context.drawImage(
+      this.video.nativeElement,
+      0,
+      0,
+      this.canvas.nativeElement.width,
+      this.canvas.nativeElement.height
+    );
+    const base64Image = this.canvas.nativeElement
+      .toDataURL('image/png')
+      .split(',')[1];
     this.inmueblesForm.patchValue({
-      imagenBase64 : base64Image
+      imagenBase64: base64Image,
     });
   }
 
@@ -333,13 +344,14 @@ export class ScannerComponent {
 
   startCamera() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
         this.video.nativeElement.srcObject = stream;
         this.video.nativeElement.play();
 
         this.video.nativeElement.onloadedmetadata = () => {
           this.canvas.nativeElement.width = this.video.nativeElement.videoWidth;
-          this.canvas.nativeElement.height = this.video.nativeElement.videoHeight;
+          this.canvas.nativeElement.height =
+            this.video.nativeElement.videoHeight;
         };
       });
     }
@@ -349,7 +361,7 @@ export class ScannerComponent {
     let stream = this.video.nativeElement.srcObject as MediaStream;
     if (stream) {
       let tracks = stream.getTracks();
-      tracks.forEach(function(track) {
+      tracks.forEach(function (track) {
         track.stop();
       });
       this.video.nativeElement.srcObject = null;
