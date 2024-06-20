@@ -42,16 +42,21 @@
                 <th style="text-transform: none; font-size: inherit" class="text-center">
                   #
                 </th>
-                <th style="text-transform: none; font-size: inherit">id</th>
-                <th style="text-transform: none; font-size: inherit">Nombre</th>
+                <th style="text-transform: none; font-size: inherit">Nombre de inmueble</th>
                 <th style="text-transform: none; font-size: inherit" class="w-1">
-                  Cantidad
+                  Area destino
                 </th>
                 <th style="text-transform: none; font-size: inherit" class="w-1">
-                  Imagen
+                  Area origen
                 </th>
                 <th style="text-transform: none; font-size: inherit" class="w-1">
-                  Codigo Qr
+                  Usuario
+                </th>
+                <th style="text-transform: none; font-size: inherit" class="w-1">
+                  Fecha
+                </th>
+                <th style="text-transform: none; font-size: inherit" class="w-1">
+                  Hora
                 </th>
                 <th style="text-transform: none; font-size: inherit" class="w-1">
                   Acciones
@@ -59,40 +64,29 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="
-                  let inmueble of inmuebleFilter | paginate : configPaginator;
-                  let pointIndex = index
-                ">
+              <tr *ngFor="let traslado of trasladosFilter | paginate: configPaginator; let pointIndex = index">
                 <td class="text-center">
                   {{
-                  configPaginator.itemsPerPage *
-                  (configPaginator.currentPage - 1) +
-                  pointIndex +
-                  1
+                    configPaginator.itemsPerPage *
+                      (configPaginator.currentPage - 1) +
+                      pointIndex +
+                      1
                   }}
                 </td>
-                <td class="text-muted">{{ inmueble.codigo }}</td>
-                <td class="text-muted">{{ inmueble.nombre }}</td>
-                <td class="text-muted">{{ inmueble.cantidad }}</td>
-                <td class="text-muted">
-                  <div class="flex justify-center items-center">
-                    <img src="{{ inmueble.imagen }}" alt="Foto de {{ inmueble.imagen }}" width="50" height="50"
-                      (click)="mostrarImagenAmpliada(inmueble.imagen)" />
-                  </div>
-                </td>
-                <td class="text-muted">
-                  <div class="flex justify-center items-center">
-                    <img src="{{ inmueble.qr }}" alt="Foto de {{ inmueble.qr }}" width="50" height="50"
-                      (click)="mostrarImagenAmpliada2(inmueble.qr)" />
-                  </div>
-                </td>
+                <td class="text-muted">{{ traslado.inmueble?.nombre }}</td>
+                <td class="text-muted">{{ traslado.areaDestino.nombre }}</td>  <!-- Display the name of the destination area -->
+                <td class="text-muted">{{ traslado.areaOrigen.nombre }}</td> <!-- Display the name of the origin area -->
+                <td class="text-muted">{{ traslado.usuario?.nombre }}</td>
+                <td class="text-muted">{{ traslado.fechaHoraCreacion | date:'yyyy-MM-dd ' }}</td>
+                <td class="text-muted">{{ traslado.fechaHoraCreacion| date:'HH:mm:ss' }}</td>
+            
                 <td>
                   <div class="d-flex justify-content-between">
                     <button class="btn btn-warning btn-icon btn-sm" data-bs-toggle="modal"
-                      data-bs-target="#modal-inmuebles" (click)="setDataModalUpdate(inmueble)">
+                      data-bs-target="#modal-inmuebles" (click)="setDataModalUpdate(traslado)">
                       <i class="ti ti-edit"></i>
                     </button>
-                    <button class="btn btn-danger btn-icon btn-sm" (click)="deleteItem(inmueble.id, inmueble.nombre)">
+                    <button class="btn btn-danger btn-icon btn-sm" (click)="deleteItem(traslado.id)">
                       <i class="ti ti-eraser"></i>
                     </button>
                   </div>
@@ -107,7 +101,7 @@
 
       <div class="card-footer d-flex align-items-center">
         <p class="m-0 text-muted">
-          Total de registros: <b>{{ inmuebleFilter.length }}</b>
+          Total de registros: <b>{{ trasladosFilter.length }}</b>
         </p>
         <div class="m-0 ms-auto">
           <pagination-controls (pageChange)="onPageChange($event)" previousLabel="" nextLabel="">
@@ -123,18 +117,18 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          {{ isModalAdd ? "Agregar" : "Actualizar" }} inmueble
+          {{ isModalAdd ? "Agregar" : "Actualizar" }} traslado
         </h5>
         <button #closebutton type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form [formGroup]="inmueblesForm" (ngSubmit)="submit()">
+      <form [formGroup]="trasladoForm" (ngSubmit)="submit()">
         <div class="modal-body">
           <div class="row">
             <div class="col-lg-12">
               <div class="mb-3">
-                <label class="form-label">Area de resguardo*:</label>
+                <label class="form-label">Area de origen*:</label>
                 <ng-select 
-                  formControlName="areasDeResgualdo" 
+                  formControlName="areaOrigen" 
                   #selectareas 
                   [searchable]="false" 
                   [items]="areas"
@@ -152,9 +146,36 @@
                   </ng-template>
                 </ng-select>
                 
-                <div *ngIf="inmueblesForm.get('areasDeResgualdo')?.touched" class="error-message">
-                  <div *ngIf="inmueblesForm.get('areasDeResgualdo')?.hasError('required')">
-                    El area de resguardo es requerido
+                <div *ngIf="trasladoForm.get('areaOrigen')?.touched" class="error-message">
+                  <div *ngIf="trasladoForm.get('areaOrigen')?.hasError('required')">
+                    El area de origen es obligatoria
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Area de destino*:</label>
+                <ng-select 
+                  formControlName="areaDestino" 
+                  #selectareas 
+                  [searchable]="false" 
+                  [items]="areas"
+                  bindLabel="nombre" 
+                  bindValue="id" 
+                  placeholder="Elegir" 
+                  [clearable]="false">
+                  
+                  <ng-template ng-header-tmp>
+                    <input class="form-control" type="text" (input)="selectareas.filter($any($event.target).value)" />
+                  </ng-template>
+                  
+                  <ng-template ng-option-tmp let-item="item" let-index="index">
+                    {{ item.nombre }}
+                  </ng-template>
+                </ng-select>
+                
+                <div *ngIf="trasladoForm.get('areaDestino')?.touched" class="error-message">
+                  <div *ngIf="trasladoForm.get('areaDestino')?.hasError('required')">
+                    El area de destino es requerido
                   </div>
                 </div>
               </div>
@@ -162,10 +183,10 @@
               <div class="mb-3">
                 <label class="form-label">Inmuebles de la zona*:</label>
                 <ng-select 
-                  formControlName="inmueblesZona" 
+                  formControlName="inmueble" 
                   #inmueblesZona 
                   [searchable]="false" 
-                  [items]="filteredInmuebles"
+                  [items]="inmuebles"
                   bindLabel="nombre" 
                   bindValue="id" 
                   placeholder="Elegir" 
@@ -180,8 +201,8 @@
                   </ng-template>
                 </ng-select>
                 
-                <div *ngIf="inmueblesForm.get('inmueblesZona')?.touched" class="error-message">
-                  <div *ngIf="inmueblesForm.get('inmueblesZona')?.hasError('required')">
+                <div *ngIf="trasladoForm.get('inmueblesZona')?.touched" class="error-message">
+                  <div *ngIf="trasladoForm.get('inmueblesZona')?.hasError('required')">
                     El inmueble debe ser seleccionado
                   </div>
                 </div>
@@ -191,10 +212,10 @@
                 <label class="form-label">Cantidad*:</label>
                 <ngx-slider formControlName="cantidad" [value]="sliderValue" [options]="sliderOptions"></ngx-slider>
                 <div>
-                  Valor del slider: {{ inmueblesForm.get('cantidad')?.value }}
+                  Valor del slider: {{ trasladoForm.get('cantidad')?.value }}
                 </div>
-                <div *ngIf="inmueblesForm.get('cantidad')?.touched" class="error-message">
-                  <div *ngIf="inmueblesForm.get('cantidad')?.hasError('required')">
+                <div *ngIf="trasladoForm.get('cantidad')?.touched" class="error-message">
+                  <div *ngIf="trasladoForm.get('cantidad')?.hasError('required')">
                     La cantidad es obligatoria
                   </div>
                 </div>
@@ -206,24 +227,11 @@
           Todos los campos marcados con * son requeridos
         </p>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success" [disabled]="!inmueblesForm.valid">
+          <button type="submit" class="btn btn-success" [disabled]="!trasladoForm.valid">
             {{ isModalAdd ? "Agregar" : "Actualizar" }}
           </button>
         </div>
       </form>
-    </div>
-  </div>
-</div>
-<div class="modal modal-blur" id="modal-imagen-ampliada" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-  aria-hidden="true" style="background: rgba(0, 0, 0, 0.2)">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="btn-close" aria-label="Close" (click)="cerrarModal()"></button>
-      </div>
-      <div class="modal-body">
-        <img *ngIf="imagenAmpliada" [src]="imagenAmpliada" alt="Imagen Ampliada" class="w-100" />
-      </div>
     </div>
   </div>
 </div>
