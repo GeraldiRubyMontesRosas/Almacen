@@ -196,7 +196,7 @@
                         <img class="img" *ngIf="inmueblesForm.get('imagenBase64')?.value" [src]="'data:image/jpg;base64,' + inmueblesForm.get('imagenBase64')?.value" width="80%" height="80%" alt="Vista previa de la imagen" class="mb-2" />
                       </div>
                       <div class="input-group">
-                        <input type="file" class="form-control" formControlName="imagenBase64" (change)="onFileChange($event)" #fileInput />
+                        <input type="file" class="form-control"(change)="onFileChange($event, 1)" #fileInput />
                       </div>
                     </div>
                     <div class="col-4 d-flex justify-content-center align-items-center">
@@ -250,6 +250,12 @@
                       }}
                     </span>
                   </label>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Factura*:</label>
+                <div class="input-group">
+                  <input type="file" class="form-control" formControlName="factura" (change)="onFileChange($event, 2)" #fileInput/>
                 </div>
               </div>
             </div>
