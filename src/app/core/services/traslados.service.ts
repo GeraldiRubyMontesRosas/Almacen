@@ -4,51 +4,47 @@ import { environment } from 'src/environments/environment';
 import { HandleErrorService } from './handle-error.service';
 import { Subject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { Inmueble } from 'src/app/models/inmueble';
+import { Traslado } from 'src/app/models/Traslado';
 
 @Injectable({
   providedIn: 'root'
 })
-export class InmueblesService {
-  route = `${environment.apiUrl}/inmuebles`;
-  private _refreshListInmueble$ = new Subject<Inmueble | null>();
+export class TrasladosService {
+  route = `${environment.apiUrl}/traslado`;
+  private _refreshListTraslado$ = new Subject<Traslado | null>();
 
   constructor(
     private http: HttpClient,
     private handleErrorService: HandleErrorService
   ) { }
 
-  get refreshListInmuebles() {
-    return this._refreshListInmueble$;
+  get refreshListTraslado() {
+    return this._refreshListTraslado$;
   }
 
   getById(id: number) {
-    return this.http.get<Inmueble>(`${this.route}/obtener-por-id/${id}`);
-  }
-
-  getByCode(code: string) {
-    return this.http.get<Inmueble[]>(`${this.route}/obtener-por-codigo/${code}`);
+    return this.http.get<Traslado>(`${this.route}/obtener-por-id/${id}`);
   }
 
   getAll() {
-    return this.http.get<Inmueble[]>(`${this.route}/obtener-todos`);
+    return this.http.get<Traslado[]>(`${this.route}/obtener-todos`);
   }
 
-  post(dto: Inmueble) {
-    return this.http.post<Inmueble>(`${this.route}/crear`, dto)
+  post(dto: Traslado) {
+    return this.http.post<Traslado>(`${this.route}/crear`, dto)
       .pipe(
         tap(() => {
-          this._refreshListInmueble$.next(null);
+          this._refreshListTraslado$.next(null);
         }),
         catchError(this.handleErrorService.handleError)
       );
   }
 
-  put(id: number, dto: Inmueble) {
-    return this.http.put<Inmueble>(`${this.route}/actualizar/${id}`, dto)
+  put(id: number, dto: Traslado) {
+    return this.http.put<Traslado>(`${this.route}/actualizar/${id}`, dto)
       .pipe(
         tap(() => {
-          this._refreshListInmueble$.next(null);
+          this._refreshListTraslado$.next(null);
         }),
         catchError(this.handleErrorService.handleError)
       );
@@ -58,7 +54,7 @@ export class InmueblesService {
     return this.http.delete(`${this.route}/eliminar/${id}`)
       .pipe(
         tap(() => {
-          this._refreshListInmueble$.next(null);
+          this._refreshListTraslado$.next(null);
         }),
         catchError(this.handleErrorService.handleError)
       );

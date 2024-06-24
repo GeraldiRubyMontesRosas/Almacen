@@ -6,7 +6,7 @@
   <h1 class="navbar-brand navbar-brand-autodark d-flex justify-content-center align-items-center">
     <img src="" style="width: 130px; height: 130px" alt="PAC" />
   </h1>
-  <div class="collapse navbar-collapse" id="sidebar-menu">
+  <div class="collapse navbar-collapse" id="sidebar-menu" *ngIf="dataObject && dataObject.isAuthenticated">
     <ul class="navbar-nav pt-lg-3">
       <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="cerrarMenu()">
         <a class="nav-link" [routerLink]="['inicio']">
@@ -64,7 +64,7 @@
                 </span>
                 <span class="nav-link-title">Scanner</span>
               </a>
-              <a class="dropdown-item" [routerLink]="['Traslados']" routerLinkActive="active"
+              <a *appHasClaim="'CanAccessTraslados'" class="dropdown-item" [routerLink]="['Traslados']" routerLinkActive="active"
                 #rlDashboard="routerLinkActive" (click)="cerrarMenu()">
                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                   <i class="ti ti-zeppelin"></i>

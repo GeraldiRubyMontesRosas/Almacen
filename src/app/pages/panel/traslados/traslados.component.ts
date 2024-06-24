@@ -13,6 +13,11 @@ import { Options } from '@angular-slider/ngx-slider';
 
 import * as XLSX from 'xlsx';
 import * as QRCode from 'qrcode-generator';
+import { TrasladosService } from 'src/app/core/services/traslados.service';
+import { Traslado } from 'src/app/models/Traslado';
+import { SecurityService } from 'src/app/core/services/security.service';
+import { AppUserAuth } from 'src/app/models/login';
+import { Usuario } from 'src/app/models/usuario';
 
 @Component({
   selector: 'app-traslados',
@@ -25,7 +30,7 @@ export class TrasladosComponent {
   public isUpdatingfoto: boolean = false;
   public imgPreview: string = '';
   public QrPreview: string = '';
-  inmueblesForm!: FormGroup;
+  trasladoForm!: FormGroup;
   QrBase64!: string;
   public isUpdatingImg: boolean = false;
   public isUpdatingEmblema: boolean = false;
@@ -34,7 +39,11 @@ export class TrasladosComponent {
   isModalAdd = true;
   inmueble!: Inmueble;
   inmuebles: Inmueble[] = [];
+  traslado!: Traslado;
+  traslados: Traslado[] = [];
+  trasladosFilter: Traslado[] = [];
   areas: Area[] = [];
+  usuarios: Usuario[] = [];
   inmuebleFilter: Inmueble[] = [];
   imagenAmpliada: string | null = null;
   estatusBtn = true;
@@ -47,6 +56,7 @@ export class TrasladosComponent {
     floor: 0,
     ceil: this.ceil,
   };  
+  dataObject!: AppUserAuth | null;
   filteredInmuebles = [];
 
   public cameraActive: boolean = false;
@@ -62,21 +72,26 @@ export class TrasladosComponent {
     private formBuilder: FormBuilder,
     public inmueblesService: InmueblesService,
     public areasService: AreasService,
+    public trasladosService: TrasladosService,
+    private securityService: SecurityService,
     private fb: FormBuilder
   ) {
-    this.inmueblesService.refreshListInmuebles.subscribe(() =>
-      this.getInmuebles()
+    this.trasladosService.refreshListTraslado.subscribe(() =>
+      this.getTraslado()
     );
-    this.getInmuebles();
-    this.creteForm();
+   
+    this.getTraslado();
+   
     this.getAreas();
+    this.getInmuebles();
+    this.createForm();
   }
 
   ngOnInit(): void {
-    this.inmueblesForm.get('areasDeResgualdo')?.valueChanges.subscribe(areaId => {
+    this.trasladoForm.get('areasDeResgualdo')?.valueChanges.subscribe(areaId => {
       this.filterInmuebles(areaId);
     });
-    this.inmueblesForm.get('cantidad')?.valueChanges.subscribe(cantidad => {
+    this.trasladoForm.get('cantidad')?.valueChanges.subscribe(cantidad => {
       this.ceil = cantidad;
     });
   }
@@ -85,9 +100,7 @@ export class TrasladosComponent {
     this.filteredInmuebles != this.inmuebles.filter(inmueble => inmueble.area?.id === areaId);
   }
 
-  setEstatus() {
-    this.estatusTag = this.estatusBtn ? this.verdadero : this.falso;
-  }
+ 
   getAreas() {
     this.isLoading = LoadingStates.trueLoading;
     this.areasService.getAll().subscribe({
@@ -111,70 +124,86 @@ export class TrasladosComponent {
     });
   }
 
-  creteForm() {
-    this.inmueblesForm = this.formBuilder.group({
-      id: [null],
-      codigo: [''],
-      nombre: [
-        '',
-        [
-          Validators.maxLength(22),
-          Validators.minLength(2),
-          Validators.required,
-        ],
-      ],
-      cantidad: ['', [Validators.maxLength(10), Validators.required]],
-      descripcion: ['', [Validators.required]],
-      imagenBase64: [''],
-      qrBase64: [''],
-      areasDeResgualdo: [null, Validators.required],
-      estatus: [true],
-      costoUnitario: ['', [Validators.maxLength(10), Validators.required]],
+  getTraslado() {
+    this.isLoading = LoadingStates.trueLoading;
+    this.trasladosService.getAll().subscribe({
+      next: (dataFromAPI) => {
+        this.traslados = dataFromAPI;
+        this.trasladosFilter = this.traslados;
+        this.isLoading = LoadingStates.falseLoading;
+      },
+      error: () => {
+        this.isLoading = LoadingStates.errorLoading;
+      },
     });
   }
+
+  createForm() {
+    this.trasladoForm = this.formBuilder.group({
+        id: [null],
+        inmueble: ['', Validators.required],
+        areaOrigen: ['', Validators.required],
+        areaDestino: ['', Validators.required],
+    });
+}
 
   resetForm() {
     this.closebutton.nativeElement.click();
-    this.inmueblesForm.reset();
+    this.trasladoForm.reset();
   }
 
-  setDataModalUpdate(dto: Inmueble) {
+  setDataModalUpdate(dto: Traslado) {
     this.isModalAdd = false;
     this.idUpdate = dto.id;
-    this.inmueblesForm.patchValue({
+    this.trasladoForm.patchValue({
       id: dto.id,
-      codigo: dto.codigo,
-      nombre: dto.nombre,
-      cantidad: dto.cantidad,
-      descripcion: dto.descripcion,
-      imagenBase64: '',
-      QrBase64: '',
-      estatus: dto.estatus,
-      areasDeResgualdo: dto.area ? dto.area.id : null,
+      inmueble: dto.inmueble?.id,
+      areaOrigen:dto.areaOrigen.id,
+      areaDestino: dto.areaDestino.id,
+      usuario: dto.usuario.id,
+      fechaHoraCreacion: dto.fechaHoraCreacion,
     });
-    console.log(this.inmueblesForm);
+    console.log(this.trasladoForm);
+
   }
 
   editarInmueble() {
-    this.inmueble = this.inmueblesForm.value as Inmueble;
-    const inmueble = this.inmueblesForm.get('id')?.value;
-    const area = this.inmueblesForm.get('areasDeResgualdo')?.value;
-    const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
-    const QrBase64 = this.inmueblesForm.get('QrBase64')?.value;
-    console.log(imagenBase64);
-    console.log(QrBase64);
+    this.traslado = this.trasladoForm.value as Traslado;
+  const inmuebleid = this.trasladoForm.get('inmueble')?.value;
+  const areaDestinoId = this.trasladoForm.get('areaDestino')?.value;
+  const areaOrigenId = this.trasladoForm.get('areaOrigen')?.value;
+  
+  
+ 
+     const areaDestino = this.areas.find(area => area.id === areaDestinoId);
+     const inmueble = this.inmuebles.find(inmueble => inmueble.id === inmuebleid);
+  if (!areaDestino) {
+    this.mensajeService.mensajeError('El área de destino seleccionada no es válida.');
+    return;
+  }
 
-    this.imgPreview = '';
-    this.QrPreview = '';
+  // Validate origin area
+  const areaOrigen = this.areas.find(area => area.id === areaOrigenId);
+  if (!areaOrigen) {
+    this.mensajeService.mensajeError('El área de origen seleccionada no es válida.');
+    return;
+  }
+  
+  if (areaOrigen === areaDestino) {
+    this.mensajeService.mensajeError('El area de origen y area destino no pueden ser las misma area');
+    return;
+  }
 
-    this.inmueble.area = { id: area } as Area;
-
-    if (!imagenBase64 && !QrBase64) {
-      const formData = { ...this.inmueble };
+  const data = { 
+    ...this.traslado,
+    areaDestino: areaDestino,
+    areaOrigen: areaOrigen,
+    inmueble: inmueble
+  };
 
       this.spinnerService.show();
 
-      this.inmueblesService.put(inmueble, formData).subscribe({
+      this.trasladosService.put(this.idUpdate, data).subscribe({
         next: () => {
           this.spinnerService.hide();
           this.mensajeService.mensajeExito(
@@ -188,38 +217,17 @@ export class TrasladosComponent {
           this.mensajeService.mensajeError(error);
         },
       });
-    } else if (imagenBase64 && QrBase64) {
-      const formData = { ...this.inmueble, imagenBase64, QrBase64 };
-      this.spinnerService.show();
+    } 
+    
+  
 
-      this.inmueblesService.put(inmueble, formData).subscribe({
-        next: () => {
-          this.spinnerService.hide();
-          this.mensajeService.mensajeExito(
-            'inmuebles actualizado correctamente'
-          );
-          this.resetForm();
-          this.configPaginator.currentPage = 1;
-        },
-        error: (error) => {
-          this.spinnerService.hide();
-          this.mensajeService.mensajeError(error);
-        },
-      });
-    } else {
-      console.error(
-        'Error: No se encontró una representación válida en base64 de la imagen.'
-      );
-    }
-  }
-
-  deleteItem(id: number, nameItem: string) {
+  deleteItem(id: number) {
     this.mensajeService.mensajeAdvertencia(
-      `¿Estás seguro de eliminar el inmueble: ${nameItem}?`,
+      `¿Estás seguro de eliminar el traslado?`,
       () => {
-        this.inmueblesService.delete(id).subscribe({
+        this.trasladosService.delete(id).subscribe({
           next: () => {
-            this.mensajeService.mensajeExito('Candidato borrado correctamente');
+            this.mensajeService.mensajeExito('Traslado borrado correctamente');
             this.configPaginator.currentPage = 1;
             this.searchItem.nativeElement.value = '';
           },
@@ -228,72 +236,66 @@ export class TrasladosComponent {
       }
     );
   }
-  onFileChange(event: Event) {
-    const inputElement = event.target as HTMLInputElement;
-
-    if (inputElement.files && inputElement.files.length > 0) {
-      const file = inputElement.files[0];
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        const base64String = reader.result as string;
-        const base64WithoutPrefix = base64String.split(';base64,').pop() || '';
-
-        this.inmueblesForm.patchValue({
-          imagenBase64: base64WithoutPrefix, // Contiene solo la representación en base64
-        });
-      };
-      this.isUpdatingfoto = false;
-      reader.readAsDataURL(file);
-    }
-  }
-
-  async generarID() {
-    const nombreControl = this.inmueblesForm.get('nombre');
-
-    if (nombreControl) {
-      const nombre = nombreControl.value.toUpperCase();
-
-      const letraAleatoria = String.fromCharCode(
-        65 + Math.floor(Math.random() * 26)
-      ).toUpperCase();
-      const numerosAleatorios = Array.from({ length: 3 }, () =>
-        Math.floor(Math.random() * 10)
-      ).join('');
-
-      // Obtener la fecha actual en formato DDMMYYYY
-      const fecha = new Date();
-      const dia = String(fecha.getDate()).padStart(2, '0');
-      const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-      const año = fecha.getFullYear();
-      const fechaActual = `${dia}${mes}${año}`;
-
-      // Generar el ID con prefijo "MAG" y fecha al final
-      const codigo = `MAG${nombre.slice(
-        0,
-        3
-      )}${letraAleatoria}${numerosAleatorios}${fechaActual}`;
-
-      const qr = QRCode(0, 'H');
-      qr.addData(codigo);
-      qr.make();
-
-      const qrDataURL = qr.createDataURL(4);
-      const qrBase64 = qrDataURL.split(',')[1]; // Extraer solo la parte base64
-
-      console.log('idGenerado:', codigo);
-      console.log('qrBase64:', qrBase64);
-
-      // Asignar el valor de idGenerado y qrBase64 al formulario
-      this.inmueblesForm.patchValue({ codigo: codigo, qrBase64: qrBase64 });
-    }
-  }
-
+ 
   agregar() {
-    this.inmueble = this.inmueblesForm.value as Inmueble;
-    const imagenBase64 = this.inmueblesForm.get('imagenBase64')?.value;
-    const qrBase64 = this.inmueblesForm.get('qrBase64')?.value;
-    const areaId = this.inmueblesForm.get('areasDeResgualdo')?.value;
+  this.traslado = this.trasladoForm.value as Traslado;
+  const inmuebleid = this.trasladoForm.get('inmueble')?.value;
+  const areaDestinoId = this.trasladoForm.get('areaDestino')?.value;
+  const areaOrigenId = this.trasladoForm.get('areaOrigen')?.value;
+  
+  
+ 
+     const areaDestino = this.areas.find(area => area.id === areaDestinoId);
+     const inmueble = this.inmuebles.find(inmueble => inmueble.id === inmuebleid);
+  if (!areaDestino) {
+    this.mensajeService.mensajeError('El área de destino seleccionada no es válida.');
+    return;
+  }
+
+  // Validate origin area
+  const areaOrigen = this.areas.find(area => area.id === areaOrigenId);
+  if (!areaOrigen) {
+    this.mensajeService.mensajeError('El área de origen seleccionada no es válida.');
+    return;
+  }
+  if (areaOrigen === areaDestino) {
+    this.mensajeService.mensajeError('El area de origen y area destino no pueden ser las misma area');
+    return;
+  }
+  const data = { 
+    ...this.traslado,
+    areaDestino: areaDestino,
+    areaOrigen: areaOrigen,
+    inmueble: inmueble
+  };
+
+  // Show loading spinner
+  this.spinnerService.show();
+  
+  // Post data to the server
+  this.trasladosService.post(data).subscribe({
+    next: () => {
+      this.spinnerService.hide();
+      this.mensajeService.mensajeExito('Traslado guardado correctamente');
+      this.resetForm();
+      this.configPaginator.currentPage = 1;
+    },
+    error: (error) => {
+      this.spinnerService.hide();
+      this.mensajeService.mensajeError(error);
+    },
+  });
+}
+  
+
+  
+  
+  
+  agregar2(){
+    this.inmueble = this.trasladoForm.value as Inmueble;
+    const imagenBase64 = this.trasladoForm.get('imagenBase64')?.value;
+    const qrBase64 = this.trasladoForm.get('qrBase64')?.value;
+    const areaId = this.trasladoForm.get('areasDeResgualdo')?.value;
 
     // Buscar el nombre del área seleccionada
     const areaSeleccionada = this.areas.find((area) => area.id === areaId);
@@ -333,16 +335,11 @@ export class TrasladosComponent {
   }
 
   handleChangeAdd() {
-    this.isUpdatingImg = false;
-    this.isUpdatingEmblema = false;
-    if (this.inmueblesForm) {
-      this.inmueblesForm.reset();
-      const estatusControl = this.inmueblesForm.get('estatus');
-      if (estatusControl) {
-        estatusControl.setValue(true);
-      }
+    
+      this.trasladoForm.reset();
+     
       this.isModalAdd = true;
-    }
+    
   }
 
   submit() {
@@ -353,31 +350,18 @@ export class TrasladosComponent {
     }
   }
 
-  mostrarImagenAmpliada(rutaImagen: string) {
-    this.imagenAmpliada = rutaImagen;
-    const modal = document.getElementById('modal-imagen-ampliada');
-    if (modal) {
-      modal.classList.add('show');
-      modal.style.display = 'block';
-    }
-  }
-  cerrarModal() {
-    this.imagenAmpliada = null;
-    const modal = document.getElementById('modal-imagen-ampliada');
-    if (modal) {
-      modal.classList.remove('show');
-      modal.style.display = 'none';
-    }
-  }
+
   handleChangeSearch(event: any) {
     const inputValue = event.target.value;
     const valueSearch = inputValue.toLowerCase();
 
-    this.inmuebleFilter = this.inmuebles.filter(
-      (inmueble) =>
-        inmueble.nombre.toLowerCase().includes(valueSearch) ||
-        inmueble.codigo.toLowerCase().includes(valueSearch) ||
-        inmueble.cantidad.toString().includes(valueSearch)
+    this.trasladosFilter = this.traslados.filter(
+      (traslados) =>
+        traslados.inmueble?.nombre.toLowerCase().includes(valueSearch) ||
+        traslados.areaDestino.nombre.toLowerCase().includes(valueSearch) ||
+        traslados.areaOrigen.nombre.toString().includes(valueSearch)  ||
+        traslados.usuario.nombre.toString().includes(valueSearch) ||
+        traslados.fechaHoraCreacion.toString().includes(valueSearch)
     );
 
     this.configPaginator.currentPage = 1;
@@ -386,18 +370,25 @@ export class TrasladosComponent {
     this.configPaginator.currentPage = number;
   }
   exportarDatosAExcel() {
-    if (this.areas.length === 0) {
-      console.warn('La lista de areas está vacía. No se puede exportar.');
+    if (this.traslados.length === 0) {
+      console.warn('La lista de traslados está vacía. No se puede exportar.');
       return;
     }
 
-    const datosParaExportar = this.areas.map((area) => {
-      const estatus = area.estatus ? 'Activo' : 'Inactivo';
+    const datosParaExportar = this.traslados.map((traslado) => {
+      const fechaFormateada = new Date(traslado.fechaHoraCreacion)
+.toISOString()
+.split('T')[0];
+      const horaFormateada = traslado.fechaHoraCreacion.toString().split('T')[1].split('.')[0];
       return {
-        '#': area.id,
-        'Nombre de area': area.nombre,
-        Responsable: area.responsable,
-        Estatus: estatus,
+        '#': traslado.id,
+        'Inmueble': traslado.inmueble?.nombre,
+        'Area de origen': traslado.areaOrigen.nombre,
+        'Area de destino': traslado.areaDestino.nombre,
+        'Usuario': traslado.usuario.nombre,
+        'Fecha': fechaFormateada,
+        'Hora': horaFormateada,
+
       };
     });
 
@@ -412,7 +403,7 @@ export class TrasladosComponent {
       type: 'array',
     });
 
-    this.guardarArchivoExcel(excelBuffer, 'Areas.xlsx');
+    this.guardarArchivoExcel(excelBuffer, 'Traslados.xlsx');
   }
 
   guardarArchivoExcel(buffer: any, nombreArchivo: string) {
@@ -426,30 +417,5 @@ export class TrasladosComponent {
     a.click();
     window.URL.revokeObjectURL(url);
   }
-  mostrarImagenAmpliada2(urlImagen: string) {
-    const imagen = new Image();
-    imagen.onload = () => {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
 
-      if (context) {
-        canvas.width = imagen.width;
-        canvas.height = imagen.height;
-        context.drawImage(imagen, 0, 0);
-
-        const impresora = window.open('', '_blank');
-        if (impresora) {
-          impresora.document.write(
-            `<img src="${urlImagen}" style="max-width: 100%; max-height: 100%;" />`
-          );
-          impresora.document.write('<script>window.print();</script>');
-        } else {
-          console.error('No se pudo abrir la ventana de impresión.');
-        }
-      } else {
-        console.error('No se pudo obtener el contexto 2D del lienzo.');
-      }
-    };
-    imagen.src = urlImagen;
-  }
 }
