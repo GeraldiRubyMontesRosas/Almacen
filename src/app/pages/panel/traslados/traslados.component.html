@@ -86,7 +86,7 @@
                       data-bs-target="#modal-inmuebles" (click)="setDataModalUpdate(traslado)">
                       <i class="ti ti-edit"></i>
                     </button>
-                    <button class="btn btn-danger btn-icon btn-sm" (click)="deleteItem(traslado.id)">
+                    <button class="btn btn-danger btn-icon btn-sm" (click)="deleteItem(traslado.id,traslado.creadoInmueble.id,traslado.inmueble,traslado.creadoInmueble.cantidad)">
                       <i class="ti ti-eraser"></i>
                     </button>
                   </div>

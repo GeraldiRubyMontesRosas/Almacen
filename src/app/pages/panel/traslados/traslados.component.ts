@@ -147,6 +147,9 @@ createForm2() {
   setDataModalUpdate(dto: Traslado) {
     this.isModalAdd = false;
     this.idUpdate = dto.id;
+    this.cantidadForm.patchValue({
+      cantidad:dto.creadoInmueble?.cantidad
+    });
     this.trasladoForm.patchValue({
       id: dto.id,
       inmueble: dto.inmueble?.id,
@@ -155,10 +158,8 @@ createForm2() {
       usuario: dto.usuario.id,
       fechaHoraCreacion: dto.fechaHoraCreacion,
     });
-    this.cantidadForm.patchValue({
-     cantidad:dto.CreadoInmueble.cantidad
-    });
-    console.log(this.trasladoForm);
+    
+    console.log(this.cantidadForm);
 
   }
 
@@ -167,6 +168,7 @@ createForm2() {
     const inmuebleid = this.trasladoForm.get('inmueble')?.value;
     const areaDestinoId = this.trasladoForm.get('areaDestino')?.value;
     const areaOrigenId = this.trasladoForm.get('areaOrigen')?.value;
+    const cantidad = this.cantidadForm.get('cantidad')?.value;
   
   
  
@@ -216,107 +218,139 @@ createForm2() {
     
   
 
-  deleteItem(id: number) {
-    this.mensajeService.mensajeAdvertencia(
-      `¿Estás seguro de eliminar el traslado?`,
-      () => {
-        this.trasladosService.delete(id).subscribe({
-          next: () => {
-            this.mensajeService.mensajeExito('Traslado borrado correctamente');
-            this.configPaginator.currentPage = 1;
-            this.searchItem.nativeElement.value = '';
-          },
-          error: (error) => this.mensajeService.mensajeError(error),
-        });
-      }
-    );
-  }
+    deleteItem(id: number,id2: number,inmueble: any, cantidad: number) {
+      this.mensajeService.mensajeAdvertencia(
+        `¿Estás seguro de eliminar el traslado?`,
+        () => {
+          this.trasladosService.delete(id).subscribe({
+            next: () => {
+              this.mensajeService.mensajeExito('Traslado borrado correctamente');
+              this.configPaginator.currentPage = 1;
+              this.searchItem.nativeElement.value = '';
+              this.inmueblesService.delete(id2).subscribe({
+                next: () => {
+                  const suma = inmueble.cantidad + cantidad;
+                                   
+                                   console.log('suma', suma);
+                  const formData = { ...inmueble, cantidad: suma };
+                  console.log('edita',formData)
+                  this.inmueblesService.put(inmueble.id, formData).subscribe({
+                    next: () => {
+                      this.spinnerService.hide();
+                      this.mensajeService.mensajeExito(
+                        'Inmueble actualizado correctamente'
+                      );
+                      this.resetForm();
+                      this.configPaginator.currentPage = 1;
+                    },
+                    error: (error) => {
+                      this.spinnerService.hide();
+                      this.mensajeService.mensajeError(error);
+                    },
+                  });
+                },
+                error: (error) => this.mensajeService.mensajeError(error),
+              });
+            },
+            error: (error) => this.mensajeService.mensajeError(error),
+          });
+        }
+      );
+    }
+    
  
-  agregar() {
-    this.traslado = this.trasladoForm.value as Traslado;
-    const inmuebleid = this.trasladoForm.get('inmueble')?.value;
-    const areaDestinoId = this.trasladoForm.get('areaDestino')?.value;
-    const areaOrigenId = this.trasladoForm.get('areaOrigen')?.value;
-    const cantidad = this.cantidadForm.get('cantidad')?.value;
-    console.log(cantidad)
-  
-    const areaDestino = this.areas.find(area => area.id === areaDestinoId);
-    const inmueble = this.inmuebles.find(inmueble => inmueble.id === inmuebleid);
-  
-    if (!areaDestino) {
-      this.mensajeService.mensajeError('El área de destino seleccionada no es válida.');
-      return;
-    }
-  
-    const areaOrigen = this.areas.find(area => area.id === areaOrigenId);
-    if (!areaOrigen) {
-      this.mensajeService.mensajeError('El área de origen seleccionada no es válida.');
-      return;
-    }
-  
-    if (areaOrigen === areaDestino) {
-      this.mensajeService.mensajeError('El área de origen y área destino no pueden ser la misma área');
-      return;
-    }
-  
-    const inmuebleSinId = { ...inmueble, area: areaDestino, cantidad:cantidad };
-    delete inmuebleSinId.id; 
-      const resta=inmueble.cantidad - cantidad;
-      const inmuebleeditado = { ...inmueble, cantidad:resta };
-      if(resta > 0){
-        this.inmueblesService.post(inmuebleSinId).subscribe({
-          next: (response) => {
-            console.log('Respuesta del servidor:', response);
-      
-            if (response && response.id) {
-              console.log('ID del inmueble generado:', response.id);
-      
-              const data = { 
-                ...this.traslado,
-                areaDestino: areaDestino,
-                areaOrigen: areaOrigen,
-                inmueble: inmueble,
-                CreadoInmueble:{ ...inmueble, id: response.id } 
-              };
-      
-              console.log('Enviando traslado:', data);
-      
-              this.spinnerService.show();
-      
-              this.trasladosService.post(data).subscribe({
-                next: () => {
-                  this.spinnerService.hide();
-                  this.mensajeService.mensajeExito('Traslado guardado correctamente');
-                  this.resetForm();
-                  this.configPaginator.currentPage = 1;
-                },
-                error: (error) => {
-                  this.spinnerService.hide();
-                  this.mensajeService.mensajeError(error);
-                },
-              });
-              this.inmueblesService.put(inmueble.id, inmuebleeditado).subscribe({
-                next: () => {
-                  this.configPaginator.currentPage = 1;
-                },
-                error: (error) => {
-                  this.spinnerService.hide();
-                  this.mensajeService.mensajeError(error);
-                },
-              });
-            } else {
-              console.log('Respuesta del servidor no contiene un ID de inmueble válido.');
-            }
-          },
-          error: (error) => {
-            this.mensajeService.mensajeError(error);
-          },
-        });
-      }else{
-        this.mensajeService.mensajeError('El inmueble contiene piesas insificientes');
+    agregar() {
+      this.traslado = this.trasladoForm.value as Traslado;
+      const inmuebleid = this.trasladoForm.get('inmueble')?.value;
+      const areaDestinoId = this.trasladoForm.get('areaDestino')?.value;
+      const areaOrigenId = this.trasladoForm.get('areaOrigen')?.value;
+      const cantidad = this.cantidadForm.get('cantidad')?.value;
+      console.log(cantidad)
+    
+      const areaDestino = this.areas.find(area => area.id === areaDestinoId);
+      const inmueble = this.inmuebles.find(inmueble => inmueble.id === inmuebleid);
+    
+      if (!areaDestino) {
+        this.mensajeService.mensajeError('El área de destino seleccionada no es válida.');
         return;
       }
-  }
+    
+      const areaOrigen = this.areas.find(area => area.id === areaOrigenId);
+      if (!areaOrigen) {
+        this.mensajeService.mensajeError('El área de origen seleccionada no es válida.');
+        return;
+      }
+    
+      if (areaOrigen === areaDestino) {
+        this.mensajeService.mensajeError('El área de origen y área destino no pueden ser la misma área');
+        return;
+      }
+    
+      const inmuebleSinId = { ...inmueble, area: areaDestino, cantidad:cantidad };
+      delete inmuebleSinId.id; 
+        const resta=inmueble.cantidad - cantidad;
+        const inmuebleeditado = { ...inmueble, cantidad:resta };
+        if(resta > 0){
+          this.inmueblesService.post(inmuebleSinId).subscribe({
+            next: (response) => {
+              console.log('Respuesta del servidor:', response);
+        
+              if (response && response.id) {
+                console.log('ID del inmueble generado:', response.id);
+        
+                const data = { 
+                  ...this.traslado,
+                  areaDestino: areaDestino,
+                  areaOrigen: areaOrigen,
+                  inmueble: inmueble,
+                  CreadoInmueble:{ ...inmueble, id: response.id } 
+                };
+        
+                console.log('Enviando traslado:', data);
+        
+                this.spinnerService.show();
+        
+                this.trasladosService.post(data).subscribe({
+                  next: () => {
+                    this.spinnerService.hide();
+                    this.mensajeService.mensajeExito('Traslado guardado correctamente');
+                    this.resetForm();
+                    this.configPaginator.currentPage = 1;
+                  },
+                  error: (error) => {
+                    this.spinnerService.hide();
+                    this.mensajeService.mensajeError(error);
+                  },
+                });
+                this.inmueblesService.put(inmuebleeditado.id, inmuebleeditado).subscribe({
+                  next: () => {
+                    this.spinnerService.hide();
+                    this.mensajeService.mensajeExito(
+                      'Inmueble actualizado correctamente'
+                    );
+                    this.resetForm();
+                    this.configPaginator.currentPage = 1;
+                  },
+                  error: (error) => {
+                    this.spinnerService.hide();
+                    this.mensajeService.mensajeError(error);
+                  },
+                });
+                
+              } else {
+                console.log('Respuesta del servidor no contiene un ID de inmueble válido.');
+              }
+            },
+            error: (error) => {
+              this.mensajeService.mensajeError(error);
+            },
+          });
+        }else{
+          this.mensajeService.mensajeError('El inmueble contiene piesas insificientes');
+          return;
+        }
+    }
+  
 
   handleChangeAdd() {
     

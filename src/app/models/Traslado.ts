@@ -9,5 +9,5 @@ export interface Traslado {
     areaDestino: Area;
     usuario: Usuario ;
     fechaHoraCreacion: string;
-    CreadoInmueble: Inmueble;
+    creadoInmueble: Inmueble;
 }
