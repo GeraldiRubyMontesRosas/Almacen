@@ -313,16 +313,7 @@
                         />
                       </div>
                       <div class="input-group">
-                        <input
-                          type="file"
-                          class="form-control"
-                          formControlName="imagenBase64"
-                          (change)="onFileChange($event)"
-                          #fileInput
-                        />
-                      </div>
-                      <div *ngIf="isUpdatingImg" class="img-preview my-1">
-                        <img [src]="imgPreview" alt="" class="img-fluid" />
+                        <input type="file" class="form-control"(change)="onFileChange($event, 1)" #fileInput />
                       </div>
                     </div>
                     <div
@@ -411,6 +402,12 @@
                       }}
                     </span>
                   </label>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Factura*:</label>
+                <div class="input-group">
+                  <input type="file" class="form-control" formControlName="factura" (change)="onFileChange($event, 2)" #fileInput/>
                 </div>
               </div>
             </div>

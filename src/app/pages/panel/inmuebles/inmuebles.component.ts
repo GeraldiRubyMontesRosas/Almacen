@@ -170,7 +170,8 @@ export class InmueblesComponent {
       qrBase64: [''],
       area: [null, Validators.required],
       estatus: [true],
-      costo: ['', [Validators.maxLength(10), Validators.required]]
+      costo: ['', [Validators.maxLength(10), Validators.required]],
+      factura: ['']
     });
   }
 
@@ -200,7 +201,8 @@ export class InmueblesComponent {
       QrBase64: '',
       estatus: dto.estatus,
       area: dto.area ? dto.area.id : null,
-      costo:dto.costo
+      costo:dto.costo,
+      facturaBase64: ''
     });
     console.log(dto);
   }
@@ -294,25 +296,41 @@ export class InmueblesComponent {
       }
     );
   }
-  onFileChange(event: Event) {
-    const inputElement = event.target as HTMLInputElement;
-    this.isUpdatingImg = false;
-    if (inputElement.files && inputElement.files.length > 0) {
-      const file = inputElement.files[0];
-      const reader = new FileReader();
+    onFileChange(event: Event, op: number) {
+      const inputElement = event.target as HTMLInputElement;
+      this.isUpdatingImg = false;
 
-      reader.onload = () => {
-        const base64String = reader.result as string;
-        const base64WithoutPrefix = base64String.split(';base64,').pop() || '';
+      if (inputElement.files && inputElement.files.length > 0) {
+        const file = inputElement.files[0];
+        const reader = new FileReader();
 
-        this.inmueblesForm.patchValue({
-          imagenBase64: base64WithoutPrefix, // Contiene solo la representación en base64
-        });
-      };
-      this.isUpdatingfoto = false;
-      reader.readAsDataURL(file);
+        reader.onload = () => {
+          const base64String = reader.result as string;
+          const base64WithoutPrefix = base64String.split(';base64,').pop() || '';
+
+          if (op === 1) {
+            this.inmueblesForm.patchValue({
+              imagenBase64: base64WithoutPrefix // Contiene solo la representación en base64
+            });
+          } else if (op === 2) {
+            this.inmueblesForm.patchValue({
+              facturaBase64: base64WithoutPrefix // Contiene solo la representación en base64
+            });
+          }
+
+          // Imprimir el valor del formulario después de actualizar
+          console.log('Imagen Base64:', this.inmueblesForm.get('imagenBase64')?.value);
+          console.log('Factura Base64:', this.inmueblesForm.get('facturaBase64')?.value);
+        };
+
+        reader.onerror = (error) => {
+          console.error('Error al leer el archivo: ', error);
+        };
+
+        reader.readAsDataURL(file);
+        this.isUpdatingfoto = false;
+      }
     }
-  }
 
   async generarID2() {
     const nombreControl = this.inmueblesForm.get('nombre');

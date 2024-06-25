@@ -13,4 +13,5 @@ export interface Inmueble {
   qrBase64: string;
   estatus: boolean;
   costo: number;
+  factura: string;
 }
