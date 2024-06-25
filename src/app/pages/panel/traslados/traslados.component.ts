@@ -31,6 +31,7 @@ export class TrasladosComponent {
   public imgPreview: string = '';
   public QrPreview: string = '';
   trasladoForm!: FormGroup;
+  cantidadForm!: FormGroup;
   QrBase64!: string;
   public isUpdatingImg: boolean = false;
   public isUpdatingEmblema: boolean = false;
@@ -38,7 +39,7 @@ export class TrasladosComponent {
   idUpdate!: number;
   isModalAdd = true;
   inmueble!: Inmueble;
-  inmuebles: Inmueble[] = [];
+  inmuebles: any[] = [];
   traslado!: Traslado;
   traslados: Traslado[] = [];
   trasladosFilter: Traslado[] = [];
@@ -79,12 +80,10 @@ export class TrasladosComponent {
     this.trasladosService.refreshListTraslado.subscribe(() =>
       this.getTraslado()
     );
-   
     this.getTraslado();
-   
     this.getAreas();
-    this.getInmuebles();
     this.createForm();
+    this.createForm2();
   }
 
   ngOnInit(): void {
@@ -110,20 +109,7 @@ export class TrasladosComponent {
     });
   }
 
-  getInmuebles() {
-    this.isLoading = LoadingStates.trueLoading;
-    this.inmueblesService.getAll().subscribe({
-      next: (dataFromAPI) => {
-        this.inmuebles = dataFromAPI;
-        this.inmuebleFilter = this.inmuebles;
-        this.isLoading = LoadingStates.falseLoading;
-      },
-      error: () => {
-        this.isLoading = LoadingStates.errorLoading;
-      },
-    });
-  }
-
+ 
   getTraslado() {
     this.isLoading = LoadingStates.trueLoading;
     this.trasladosService.getAll().subscribe({
@@ -147,6 +133,12 @@ export class TrasladosComponent {
     });
 }
 
+createForm2() {
+  this.cantidadForm = this.formBuilder.group({
+      cantidad: ['', Validators.required],
+  });
+}
+
   resetForm() {
     this.closebutton.nativeElement.click();
     this.trasladoForm.reset();
@@ -163,15 +155,18 @@ export class TrasladosComponent {
       usuario: dto.usuario.id,
       fechaHoraCreacion: dto.fechaHoraCreacion,
     });
+    this.cantidadForm.patchValue({
+     cantidad:dto.CreadoInmueble.cantidad
+    });
     console.log(this.trasladoForm);
 
   }
 
   editarInmueble() {
     this.traslado = this.trasladoForm.value as Traslado;
-  const inmuebleid = this.trasladoForm.get('inmueble')?.value;
-  const areaDestinoId = this.trasladoForm.get('areaDestino')?.value;
-  const areaOrigenId = this.trasladoForm.get('areaOrigen')?.value;
+    const inmuebleid = this.trasladoForm.get('inmueble')?.value;
+    const areaDestinoId = this.trasladoForm.get('areaDestino')?.value;
+    const areaOrigenId = this.trasladoForm.get('areaOrigen')?.value;
   
   
  
@@ -238,100 +233,89 @@ export class TrasladosComponent {
   }
  
   agregar() {
-  this.traslado = this.trasladoForm.value as Traslado;
-  const inmuebleid = this.trasladoForm.get('inmueble')?.value;
-  const areaDestinoId = this.trasladoForm.get('areaDestino')?.value;
-  const areaOrigenId = this.trasladoForm.get('areaOrigen')?.value;
+    this.traslado = this.trasladoForm.value as Traslado;
+    const inmuebleid = this.trasladoForm.get('inmueble')?.value;
+    const areaDestinoId = this.trasladoForm.get('areaDestino')?.value;
+    const areaOrigenId = this.trasladoForm.get('areaOrigen')?.value;
+    const cantidad = this.cantidadForm.get('cantidad')?.value;
+    console.log(cantidad)
   
+    const areaDestino = this.areas.find(area => area.id === areaDestinoId);
+    const inmueble = this.inmuebles.find(inmueble => inmueble.id === inmuebleid);
   
- 
-     const areaDestino = this.areas.find(area => area.id === areaDestinoId);
-     const inmueble = this.inmuebles.find(inmueble => inmueble.id === inmuebleid);
-  if (!areaDestino) {
-    this.mensajeService.mensajeError('El área de destino seleccionada no es válida.');
-    return;
-  }
-
-  // Validate origin area
-  const areaOrigen = this.areas.find(area => area.id === areaOrigenId);
-  if (!areaOrigen) {
-    this.mensajeService.mensajeError('El área de origen seleccionada no es válida.');
-    return;
-  }
-  if (areaOrigen === areaDestino) {
-    this.mensajeService.mensajeError('El area de origen y area destino no pueden ser las misma area');
-    return;
-  }
-  const data = { 
-    ...this.traslado,
-    areaDestino: areaDestino,
-    areaOrigen: areaOrigen,
-    inmueble: inmueble
-  };
-
-  // Show loading spinner
-  this.spinnerService.show();
-  
-  // Post data to the server
-  this.trasladosService.post(data).subscribe({
-    next: () => {
-      this.spinnerService.hide();
-      this.mensajeService.mensajeExito('Traslado guardado correctamente');
-      this.resetForm();
-      this.configPaginator.currentPage = 1;
-    },
-    error: (error) => {
-      this.spinnerService.hide();
-      this.mensajeService.mensajeError(error);
-    },
-  });
-}
-  
-
-  
-  
-  
-  agregar2(){
-    this.inmueble = this.trasladoForm.value as Inmueble;
-    const imagenBase64 = this.trasladoForm.get('imagenBase64')?.value;
-    const qrBase64 = this.trasladoForm.get('qrBase64')?.value;
-    const areaId = this.trasladoForm.get('areasDeResgualdo')?.value;
-
-    // Buscar el nombre del área seleccionada
-    const areaSeleccionada = this.areas.find((area) => area.id === areaId);
-    if (!areaSeleccionada) {
-      this.mensajeService.mensajeError(
-        'El área de resguardo seleccionada no es válida.'
-      );
+    if (!areaDestino) {
+      this.mensajeService.mensajeError('El área de destino seleccionada no es válida.');
       return;
     }
-
-    // Crear el objeto inmueble con el área completa
-    const inmuebleSinId = { ...this.inmueble, area: areaSeleccionada };
-
-    console.log(inmuebleSinId);
-
-    if (imagenBase64 && qrBase64) {
-      const formData = { ...inmuebleSinId, imagenBase64, qrBase64 }; // Utilizar idGenerado como el valor del código
-      this.spinnerService.show();
-      this.inmueblesService.post(formData).subscribe({
-        next: () => {
-          this.spinnerService.hide();
-          this.mensajeService.mensajeExito('Inmueble guardado correctamente');
-          this.resetForm();
-          this.configPaginator.currentPage = 1;
-        },
-        error: (error) => {
-          this.spinnerService.hide();
-          this.mensajeService.mensajeError(error);
-        },
-      });
-    } else {
-      this.spinnerService.hide();
-      this.mensajeService.mensajeError(
-        'Error: No se encontró una representación válida de la imagen o QR.'
-      );
+  
+    const areaOrigen = this.areas.find(area => area.id === areaOrigenId);
+    if (!areaOrigen) {
+      this.mensajeService.mensajeError('El área de origen seleccionada no es válida.');
+      return;
     }
+  
+    if (areaOrigen === areaDestino) {
+      this.mensajeService.mensajeError('El área de origen y área destino no pueden ser la misma área');
+      return;
+    }
+  
+    const inmuebleSinId = { ...inmueble, area: areaDestino, cantidad:cantidad };
+    delete inmuebleSinId.id; 
+      const resta=inmueble.cantidad - cantidad;
+      const inmuebleeditado = { ...inmueble, cantidad:resta };
+      if(resta > 0){
+        this.inmueblesService.post(inmuebleSinId).subscribe({
+          next: (response) => {
+            console.log('Respuesta del servidor:', response);
+      
+            if (response && response.id) {
+              console.log('ID del inmueble generado:', response.id);
+      
+              const data = { 
+                ...this.traslado,
+                areaDestino: areaDestino,
+                areaOrigen: areaOrigen,
+                inmueble: inmueble,
+                CreadoInmueble:{ ...inmueble, id: response.id } 
+              };
+      
+              console.log('Enviando traslado:', data);
+      
+              this.spinnerService.show();
+      
+              this.trasladosService.post(data).subscribe({
+                next: () => {
+                  this.spinnerService.hide();
+                  this.mensajeService.mensajeExito('Traslado guardado correctamente');
+                  this.resetForm();
+                  this.configPaginator.currentPage = 1;
+                },
+                error: (error) => {
+                  this.spinnerService.hide();
+                  this.mensajeService.mensajeError(error);
+                },
+              });
+              this.inmueblesService.put(inmueble.id, inmuebleeditado).subscribe({
+                next: () => {
+                  this.configPaginator.currentPage = 1;
+                },
+                error: (error) => {
+                  this.spinnerService.hide();
+                  this.mensajeService.mensajeError(error);
+                },
+              });
+            } else {
+              console.log('Respuesta del servidor no contiene un ID de inmueble válido.');
+            }
+          },
+          error: (error) => {
+            this.mensajeService.mensajeError(error);
+          },
+        });
+      }else{
+        this.mensajeService.mensajeError('El inmueble contiene piesas insificientes');
+        return;
+      }
   }
 
   handleChangeAdd() {
@@ -416,6 +400,16 @@ export class TrasladosComponent {
     a.download = nombreArchivo;
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  inmuebleporarea(id: number) {
+    this.inmueblesService.getByArea(id).subscribe({
+      next: (dataFromAPI) => {
+        this.inmuebles = dataFromAPI;
+        this.inmuebleFilter = this.inmuebles;
+       
+      },
+    });
   }
 
 }

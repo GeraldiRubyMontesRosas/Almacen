@@ -46,7 +46,7 @@ export class UsuariosComponent {
     this.getResponsables();
     this.creteForm();
 
-    this.subscribeRolId();
+
     this.isModalAdd = false;
   }
 
@@ -60,20 +60,7 @@ export class UsuariosComponent {
       }
     });
 
-    this.usuarioForm.get('responsable')?.valueChanges.subscribe((value) => {
-      if (value) {
-        const responsableSeleccionado = this.responsables.find(
-          (r) => r.id === value
-        );
-        if (responsableSeleccionado) {
-          this.usuarioForm
-            .get('nombre')
-            ?.setValue(responsableSeleccionado.nombreCompleto);
-        }
-      } else {
-        this.usuarioForm.get('nombre')?.setValue('');
-      }
-    });
+    
   }
 
   getRols() {
@@ -117,41 +104,6 @@ export class UsuariosComponent {
     });
   }
 
-  changeValidatorsCandidato(rolId: number) {
-    //Si es candidato
-    if (rolId === 7) {
-      this.usuarioForm.controls['candidatoId'].enable();
-      this.usuarioForm.controls['candidatoId'].setValidators(
-        Validators.required
-      );
-    } else {
-      this.usuarioForm.controls['candidatoId'].disable();
-      this.usuarioForm.controls['candidatoId'].clearValidators();
-    }
-    this.usuarioForm.get('candidatoId')?.updateValueAndValidity();
-  }
-
-  changeValidatorsOperador(rolId: number) {
-    //Si es operador
-    if (rolId === 6) {
-      this.usuarioForm.controls['operadorId'].enable();
-      this.usuarioForm.controls['operadorId'].setValidators(
-        Validators.required
-      );
-    } else {
-      this.usuarioForm.controls['operadorId'].disable();
-      this.usuarioForm.controls['operadorId'].clearValidators();
-    }
-    this.usuarioForm.get('operadorId')?.updateValueAndValidity();
-  }
-
-  subscribeRolId() {
-    this.usuarioForm.get('rolId')?.valueChanges.subscribe((eventRolId) => {
-      this.usuarioForm.patchValue({ candidatoId: null, operadorId: null });
-      this.changeValidatorsCandidato(eventRolId);
-      this.changeValidatorsOperador(eventRolId);
-    });
-  }
 
   getUsuarios() {
     this.isLoading = LoadingStates.trueLoading;
@@ -190,7 +142,7 @@ export class UsuariosComponent {
   setDataModalUpdate(dto: Usuario) {
     this.isModalAdd = false;
     this.idUpdate = dto.id;
-    this.nombreLabel = dto.nombre;
+  
     console.log(this.nombreLabel);
     this.usuarioForm.patchValue({
       id: dto.id,
@@ -208,7 +160,7 @@ export class UsuariosComponent {
 
     const rolId = this.usuarioForm.get('rol')?.value;
     const responsableId = this.usuarioForm.get('responsable')?.value;
-
+    const nombrecompleto = this.usuarioForm.get('nombre')?.value;
     // Find the corresponding rol and responsable objects
     const rolSeleccionado = this.rol.find((rol) => rol.id === rolId);
     const responsableSeleccionado = this.responsables.find(
@@ -227,6 +179,7 @@ export class UsuariosComponent {
       ...this.usuario,
       rol: rolSeleccionado,
       responsable: responsableSeleccionado,
+      nombreCompleto: nombrecompleto
     };
     this.spinnerService.show();
     this.usuarioService.put(this.idUpdate, inmuebleSinId).subscribe({

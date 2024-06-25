@@ -135,7 +135,8 @@
                   bindLabel="nombre" 
                   bindValue="id" 
                   placeholder="Elegir" 
-                  [clearable]="false">
+                  [clearable]="false"
+                  (change)="inmuebleporarea($event?.id)">
                   
                   <ng-template ng-header-tmp>
                     <input class="form-control" type="text" (input)="selectareas.filter($any($event.target).value)" />
@@ -190,7 +191,8 @@
                   bindLabel="nombre" 
                   bindValue="id" 
                   placeholder="Elegir" 
-                  [clearable]="false">
+                  [clearable]="false"
+                  >
                   
                   <ng-template ng-header-tmp>
                     <input class="form-control" type="text" (input)="inmueblesZona.filter($any($event.target).value)" />
@@ -207,19 +209,20 @@
                   </div>
                 </div>
               </div>
-
+              <form [formGroup]="cantidadForm">
               <div class="mb-3">
                 <label class="form-label">Cantidad*:</label>
                 <ngx-slider formControlName="cantidad" [value]="sliderValue" [options]="sliderOptions"></ngx-slider>
                 <div>
-                  Valor del slider: {{ trasladoForm.get('cantidad')?.value }}
+                  Valor del slider: {{ cantidadForm.get('cantidad')?.value }}
                 </div>
-                <div *ngIf="trasladoForm.get('cantidad')?.touched" class="error-message">
-                  <div *ngIf="trasladoForm.get('cantidad')?.hasError('required')">
+                <div *ngIf="cantidadForm.get('cantidad')?.touched" class="error-message">
+                  <div *ngIf="cantidadForm.get('cantidad')?.hasError('required')">
                     La cantidad es obligatoria
                   </div>
                 </div>
               </div>
+            </form>
             </div>
           </div>
         </div>
